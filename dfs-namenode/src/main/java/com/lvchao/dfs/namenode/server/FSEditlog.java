@@ -178,9 +178,6 @@ public class FSEditlog {
 			// 因为 syncBuffer负责同步磁盘，currentBuffer负责同步磁盘，未同步到磁盘的数据还保留在currentBuffer中，所以需要交换一下
 			doubleBuffer.setReadyToSync();
 			doubleBuffer.flush();
-			/*if (Objects.nonNull(editslogInfo)){
-				editslogInfoList.add(editslogInfo);
-			}*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

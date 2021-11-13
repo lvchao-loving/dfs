@@ -1,5 +1,11 @@
 package com.lvchao.dfs.namenode.server;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+
 /**
  * 负责管理元数据的核心组件
  */
@@ -56,5 +62,32 @@ public class FSNamesystem {
 	public void setCheckpointTxid(Long checkpointTxid) {
 		ThreadUntils.println("接收到的checkpointTxid:" + checkpointTxid);
 		this.checkpointTxid = checkpointTxid;
+	}
+
+	/**
+	 * 将 checkpointTxid 保存到磁盘中
+	 */
+	public void saveCheckPointTxid(){
+		try {
+			// 先把上一次的fsimage文件删除
+			String filePath = "F:\\editslog\\checkpoint-txid.meta";
+			File file = new File(filePath);
+			if(file.exists()) {
+				file.delete();
+			}
+			try (
+					RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+					FileOutputStream fileOutputStream = new FileOutputStream(randomAccessFile.getFD());
+					FileChannel fileChannel = fileOutputStream.getChannel();
+			){
+				fileChannel.write(StandardCharsets.UTF_8.encode(String.valueOf(checkpointTxid)));
+				fileChannel.force(true);
+				ThreadUntils.println("保存checkpointTxid:" + checkpointTxid);
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

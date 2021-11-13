@@ -39,7 +39,7 @@ public class EditsLogFetcher extends Thread{
 
         while(backupNode.isRunning()) {
             try {
-                JSONArray editsLogs = namenode.fetchEditsLog();
+                JSONArray editsLogs = namenode.fetchEditsLog(fsNamesystem.getSyncedTxid());
 
                 if (editsLogs.size() == 0){
                     ThreadUntils.println("没有拉取到任何一条editslog，等待5秒后继续尝试拉取");

@@ -91,13 +91,14 @@ public final class NameNodeRpcModel {
       "tResponse\022\016\n\006status\030\001 \001(\005\"\034\n\014MkdirReques" +
       "t\022\014\n\004path\030\001 \001(\t\"\037\n\rMkdirResponse\022\016\n\006stat" +
       "us\030\001 \001(\005\"\037\n\017ShutdownRequest\022\014\n\004code\030\001 \001(" +
-      "\005\"\"\n\020ShutdownResponse\022\016\n\006status\030\001 \001(\005\"$\n" +
-      "\024FetchEditsLogRequest\022\014\n\004code\030\001 \001(\005\")\n\025F",
-      "etchEditsLogResponse\022\020\n\010editsLog\030\001 \001(\t\"+" +
-      "\n\033UpdateCheckpointTxidRequest\022\014\n\004txid\030\001 " +
-      "\001(\003\".\n\034UpdateCheckpointTxidResponse\022\016\n\006s" +
-      "tatus\030\001 \001(\005B7\n!com.lvchao.dfs.namenode.r" +
-      "pc.modelB\020NameNodeRpcModelP\001b\006proto3"
+      "\005\"\"\n\020ShutdownResponse\022\016\n\006status\030\001 \001(\005\"*\n" +
+      "\024FetchEditsLogRequest\022\022\n\nsyncedTxid\030\001 \001(",
+      "\003\")\n\025FetchEditsLogResponse\022\020\n\010editsLog\030\001" +
+      " \001(\t\"+\n\033UpdateCheckpointTxidRequest\022\014\n\004t" +
+      "xid\030\001 \001(\003\".\n\034UpdateCheckpointTxidRespons" +
+      "e\022\016\n\006status\030\001 \001(\005B7\n!com.lvchao.dfs.name" +
+      "node.rpc.modelB\020NameNodeRpcModelP\001b\006prot" +
+      "o3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -164,7 +165,7 @@ public final class NameNodeRpcModel {
     internal_static_com_lvchao_dfs_namenode_rpc_FetchEditsLogRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_lvchao_dfs_namenode_rpc_FetchEditsLogRequest_descriptor,
-        new java.lang.String[] { "Code", });
+        new java.lang.String[] { "SyncedTxid", });
     internal_static_com_lvchao_dfs_namenode_rpc_FetchEditsLogResponse_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_com_lvchao_dfs_namenode_rpc_FetchEditsLogResponse_fieldAccessorTable = new

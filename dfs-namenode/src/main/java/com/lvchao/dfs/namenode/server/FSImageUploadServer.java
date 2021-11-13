@@ -137,13 +137,14 @@ public class FSImageUploadServer extends Thread{
                     fsimageFileChannel.write(buffer);
                     buffer.clear();
                 }
+                fsimageFileChannel.force(true);
                 // 当 read为-1 时说明正常断开连接
                 if (read == -1){
                     ThreadUntils.println("正常关闭key");
                     key.cancel();
+                }else {
+                    socketChannel.register(selector, SelectionKey.OP_WRITE);
                 }
-                fsimageFileChannel.force(true);
-                socketChannel.register(selector, SelectionKey.OP_WRITE);
             } catch (Exception e){
                 // 异常情况下取消事件处理（因为客户端断开了，因此需要将key取消，从selector的keys集合中真正删除 key）
                 key.cancel();

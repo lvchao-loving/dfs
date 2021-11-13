@@ -37,10 +37,6 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	 */
 	private volatile Boolean isRunning = true;
 	/**
-	 * 当前节backupNode节点同步到哪一条txid数据了
-	 */
-	private Long syncedTxid = 0L;
-	/**
 	 * 当前缓冲的一小部分 editslog
 	 */
 	private JSONArray currentBufferedEditsLog = new JSONArray();
@@ -118,8 +114,13 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	@Override
 	public void shutdown(ShutdownRequest request, StreamObserver<ShutdownResponse> responseObserver) {
 		try {
+			// 关闭 NameNode 服务标识
 			this.isRunning = false;
+			// 将内存中的 editslog 持久化到磁盘中
 			this.namesystem.flush();
+			// 将内存中的 CheckPointTxid 持久化到磁盘中
+			this.namesystem.saveCheckPointTxid();
+
 			ShutdownResponse response = ShutdownResponse.newBuilder().setStatus(STATUS_SUCCESS).build();
 			responseObserver.onNext(response);
 			responseObserver.onCompleted();
@@ -130,6 +131,16 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 
 	@Override
 	public void fetchEditsLog(FetchEditsLogRequest request, StreamObserver<FetchEditsLogResponse> responseObserver) {
+		// true：NameNode节点正在关闭
+		if (!isRunning){
+			FetchEditsLogResponse fetchEditsLogResponse = FetchEditsLogResponse.newBuilder().setEditsLog(new JSONArray().toJSONString()).build();
+			responseObserver.onNext(fetchEditsLogResponse);
+			responseObserver.onCompleted();
+			return;
+		}
+
+		Long syncedTxid = request.getSyncedTxid();
+
 		FetchEditsLogResponse response = null;
 		// 记录当前 BackupNode 节点拉取数据
 		JSONArray fetchedEditsLog = new JSONArray();
@@ -140,15 +151,15 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		// NameNode-没有同步过磁盘，如果有数据的话也仅仅在内存中
 		if(flushedTxids.size() == 0) {
 			ThreadUntils.println("暂时没有任何磁盘文件，直接从内存缓冲中拉取editslog......");
-			fetchFromBufferedEditsLog(fetchedEditsLog);
+			fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 		}
 		// NameNode-同步过磁盘，从磁盘中拉取数据
 		else {
 			// 有磁盘文件，缓存中有存储过磁盘文件
 			if(bufferedFlushedTxid != null) {
-				if (existInFlushedFile(bufferedFlushedTxid)){
+				if (existInFlushedFile(syncedTxid, bufferedFlushedTxid)){
 					ThreadUntils.println("上一次已经缓存过磁盘文件的数据，直接从磁盘文件缓存中拉取editslog......");
-					fetchFromCurrentBuffer(fetchedEditsLog);
+					fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 				}
 				// 拉取的数据不再当前缓存的配置文件中，需要从下一个磁盘文件中拉取
 				else {
@@ -156,12 +167,12 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 					// 如果可以找到下一个磁盘文件，那么就从下一个磁盘文件里开始读取数据
 					if(nextFlushedTxid != null) {
 						ThreadUntils.println("上一次缓存的磁盘文件找不到要拉取的数据，从下一个磁盘文件中拉取editslog......");
-						fetchFromFlushedFile(nextFlushedTxid, fetchedEditsLog);
+						fetchFromFlushedFile(syncedTxid,nextFlushedTxid, fetchedEditsLog);
 					}
 					// 如果没有找到下一个文件，此时就需要从内存里去继续读取
 					else {
 						ThreadUntils.println("上一次缓存的磁盘文件找不到要拉取的数据，而且没有下一个磁盘文件，尝试从内存缓冲中拉取editslog......");
-						fetchFromBufferedEditsLog(fetchedEditsLog);
+						fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 					}
 				}
 			}
@@ -172,10 +183,10 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 				// 遍历所有持久磁盘的文件
 				for (String flushedTxid:flushedTxids) {
 					// 判断需要下次拉取的 txid 是否在当前缓存文件中
-					if (existInFlushedFile(flushedTxid)){
+					if (existInFlushedFile(syncedTxid, flushedTxid)){
 						ThreadUntils.println("尝试从磁盘文件中拉取editslog，flushedTxid=" + flushedTxid);
 						// 将对应的磁盘文件加载到内存中
-						fetchFromFlushedFile(flushedTxid, fetchedEditsLog);
+						fetchFromFlushedFile(syncedTxid, flushedTxid, fetchedEditsLog);
 						fetchedFromFlushedFile = true;
 						break;
 					}
@@ -184,7 +195,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 				// 遍历所有文件没有找到则从缓存中去继续读取
 				if(!fetchedFromFlushedFile){
 					ThreadUntils.println("所有磁盘文件都没找到要拉取的editslog，尝试直接从内存缓冲中拉取editslog......");
-					fetchFromBufferedEditsLog(fetchedEditsLog);
+					fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 				}
 			}
 		}
@@ -219,9 +230,11 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 
 	/**
 	 * 从已经刷入磁盘的文件里读取 edislog，同时缓存找个文件数据到内存
+	 * @param syncedTxid
 	 * @param flushedTxid
+	 * @param fetchedEditsLog
 	 */
-	private void fetchFromFlushedFile(String flushedTxid,JSONArray fetchedEditsLog){
+	private void fetchFromFlushedFile(Long syncedTxid, String flushedTxid, JSONArray fetchedEditsLog){
 		try {
 			String[] flushedTxidSplited = flushedTxid.split("_");
 
@@ -238,7 +251,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 			// 缓存记录正在同步的文件名称
 			bufferedFlushedTxid = flushedTxid;
 
-			fetchFromCurrentBuffer(fetchedEditsLog);
+			fetchFromCurrentBuffer(syncedTxid,fetchedEditsLog);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -246,10 +259,11 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 
 	/**
 	 * 是否存在于刷到磁盘的文件中
+	 * @param syncedTxid
 	 * @param flushedTxid
 	 * @return
 	 */
-	private Boolean existInFlushedFile(String flushedTxid){
+	private Boolean existInFlushedFile(Long syncedTxid,String flushedTxid){
 		String[] flushedTxidSplited = flushedTxid.split("_");
 
 		Long startTxid = Long.valueOf(flushedTxidSplited[0]);
@@ -265,13 +279,13 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	 * 从内存缓冲中拉取数据
 	 * @param fetchedEditsLog
 	 */
-	private void fetchFromBufferedEditsLog(JSONArray fetchedEditsLog){
+	private void fetchFromBufferedEditsLog(Long syncedTxid,JSONArray fetchedEditsLog){
 		// 本次拉取的起始 txid
 		Long fetchTxid = syncedTxid + 1;
 
 		if(fetchTxid <= currentBufferedMaxTxid) {
 			ThreadUntils.println("尝试从内存缓冲拉取的时候，发现上一次内存缓存有数据可供拉取......");
-			fetchFromCurrentBuffer(fetchedEditsLog);
+			fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 			return;
 		}
 		// 清除之前拉取过的暂存数据
@@ -289,20 +303,22 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 			}
 			bufferedFlushedTxid = null;
 
-			fetchFromCurrentBuffer(fetchedEditsLog);
+			fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 		}
 	}
 
 	/**
 	 * 从当前已经在内存里缓存的数据中拉取editslog
+	 * @param syncedTxid
 	 * @param fetchedEditsLog
 	 */
-	private void fetchFromCurrentBuffer(JSONArray fetchedEditsLog) {
+	private void fetchFromCurrentBuffer(Long syncedTxid, JSONArray fetchedEditsLog) {
 		int fetchCount = 0;
+		long fetchTxid = syncedTxid + 1;
 		for(int i = 0; i < currentBufferedEditsLog.size(); i++) {
-			if(currentBufferedEditsLog.getJSONObject(i).getLong("txid") == syncedTxid + 1) {
+			if(currentBufferedEditsLog.getJSONObject(i).getLong("txid") == fetchTxid) {
 				fetchedEditsLog.add(currentBufferedEditsLog.getJSONObject(i));
-				syncedTxid = currentBufferedEditsLog.getJSONObject(i).getLong("txid");
+				fetchTxid = currentBufferedEditsLog.getJSONObject(i).getLong("txid") + 1;
 				fetchCount++;
 			}
 			if(fetchCount >= BACKUP_NODE_FETCH_SIZE) {

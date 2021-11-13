@@ -40,9 +40,9 @@ public class NameNodeRpcClient {
      * 拉取 editslog 数据
      * @return
      */
-    public JSONArray fetchEditsLog() {
+    public JSONArray fetchEditsLog(Long syncedTxid) {
         Integer fetchEditsLogCode = 1;
-        FetchEditsLogRequest request = FetchEditsLogRequest.newBuilder().setCode(fetchEditsLogCode).build();
+        FetchEditsLogRequest request = FetchEditsLogRequest.newBuilder().setSyncedTxid(syncedTxid).build();
 
         FetchEditsLogResponse response = namenode.fetchEditsLog(request);
         String editsLogJson = response.getEditsLog();
