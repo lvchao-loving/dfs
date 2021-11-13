@@ -29,7 +29,7 @@ public class FSImageUploadServer extends Thread{
     private void init(){
         ServerSocketChannel serverSocketChannel = null;
         try{
-            ThreadUntils.println("FSImageUploadServer 初始化开始...");
+
             // 创建 Selector
             selector = Selector.open();
             // 创建 ServerSocketChannel
@@ -40,7 +40,6 @@ public class FSImageUploadServer extends Thread{
             serverSocketChannel.socket().bind(new InetSocketAddress(9000), 100);
             // 注册 selector的SelectionKey.OP_ACCEPT事件
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            ThreadUntils.println("FSImageUploadServer 初始化结束...");
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -48,13 +47,16 @@ public class FSImageUploadServer extends Thread{
 
     @Override
     public void run() {
+        ThreadUntils.println("FSImageUploadServer 成功启动...");
         while (true){
             try{
+                // 当 selector 中没有对应的 selectionKey 事件触发时阻塞
                 selector.select();
                 Iterator<SelectionKey> keysIterator = selector.selectedKeys().iterator();
 
                 while (keysIterator.hasNext()){
                     SelectionKey key = keysIterator.next();
+                    // 将处理后的 SelectionKey 事件移除
                     keysIterator.remove();
                     try {
                         handleRequest(key);
@@ -174,11 +176,5 @@ public class FSImageUploadServer extends Thread{
                 socketChannel.close();
             }
         }
-    }
-
-    public static void main(String[] args) {
-        FSImageUploadServer fsImageUploadServer = new FSImageUploadServer();
-        fsImageUploadServer.setName("FSImageUploadServer");
-        fsImageUploadServer.start();
     }
 }
