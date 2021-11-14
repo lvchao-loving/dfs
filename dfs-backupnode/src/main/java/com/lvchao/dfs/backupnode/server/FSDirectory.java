@@ -30,6 +30,22 @@ public class FSDirectory {
      */
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
+    public Long getMaxTxid() {
+        return maxTxid;
+    }
+
+    public void setMaxTxid(Long maxTxid) {
+        this.maxTxid = maxTxid;
+    }
+
+    public INode getDirTree() {
+        return dirTree;
+    }
+
+    public void setDirTree(INode dirTree) {
+        this.dirTree = dirTree;
+    }
+
     public void writeLock(){
         lock.writeLock().lock();
     }
@@ -152,6 +168,9 @@ public class FSDirectory {
 
         private String path;
         private List<INode> children;
+
+        public INode() {
+        }
 
         public INode(String path) {
             this.path = path;

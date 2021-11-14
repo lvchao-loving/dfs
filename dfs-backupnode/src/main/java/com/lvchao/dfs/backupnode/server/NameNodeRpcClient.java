@@ -25,6 +25,19 @@ public class NameNodeRpcClient {
     private NameNodeServiceGrpc.NameNodeServiceBlockingStub namenode;
 
     /**
+     * namenode 是否正常运行标识，默认 运行（true）
+     */
+    private Boolean isNamenodeRunning = true;
+
+    public Boolean getNamenodeRunning() {
+        return isNamenodeRunning;
+    }
+
+    public void setNamenodeRunning(Boolean namenodeRunning) {
+        this.isNamenodeRunning = namenodeRunning;
+    }
+
+    /**
      * 初始化 rpc
      */
     public NameNodeRpcClient() {
@@ -55,11 +68,6 @@ public class NameNodeRpcClient {
      * @param txid
      */
     public void updateCheckpointTxid(Long txid){
-        // 第一次启动，暂无需要同步的 txid，不需要发送数据
-        if (txid == 0){
-            ThreadUntils.println("第一次启动，暂无需要同步的 txid，不需要发送数据");
-            return;
-        }
         ThreadUntils.println("同步当前的 txid = " + txid);
         UpdateCheckpointTxidRequest updateCheckpointTxidRequest = UpdateCheckpointTxidRequest.newBuilder().setTxid(txid).build();
         UpdateCheckpointTxidResponse updateCheckpointTxidResponse = namenode.updateCheckpointTxid(updateCheckpointTxidRequest);

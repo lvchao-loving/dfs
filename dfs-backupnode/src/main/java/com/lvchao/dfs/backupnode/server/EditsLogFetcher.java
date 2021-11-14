@@ -39,6 +39,11 @@ public class EditsLogFetcher extends Thread{
 
         while(backupNode.isRunning()) {
             try {
+                if (!fsNamesystem.isFinishedRecover()){
+                    ThreadUntils.println("当前还没完成元数据恢复，不进行editlog同步......，等待5秒钟");
+                    Thread.sleep(5000);
+                }
+
                 JSONArray editsLogs = namenode.fetchEditsLog(fsNamesystem.getSyncedTxid());
 
                 if (editsLogs.size() == 0){
@@ -66,7 +71,11 @@ public class EditsLogFetcher extends Thread{
                         }
                     }
                 }
+                // 正常成功拉取数据则设置成 true
+                namenode.setNamenodeRunning(true);
             } catch (InterruptedException e) {
+                // 从 Namenode 节点中拉取数据出现了异常，则判断 Namenode 运行异常
+                namenode.setNamenodeRunning(false);
                 e.printStackTrace();
             }
         }
