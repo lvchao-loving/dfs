@@ -1,4 +1,6 @@
-package com.lvchao.dfs.namenode.server;
+package com.lvchao.test;
+
+import com.lvchao.dfs.namenode.server.ThreadUntils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,19 +13,25 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 /**
- * @Title: FSImageUploadServer
- * @Package: com.lvchao.dfs.namenode.server
- * @Description: 负责 fsimage 文件上传的server
+ * @Title: Test02
+ * @Package: com.lvchao.test
+ * @Description:
  * @auther: chao.lv
- * @date: 2021/10/31 19:48
+ * @date: 2021/11/14 14:19
  * @version: V1.0
  */
-public class FSImageUploadServer extends Thread{
+public class Test02 extends Thread{
 
     private Selector selector;
 
-    public FSImageUploadServer(){
+    public Test02(){
         this.init();
+    }
+
+    public static void main(String[] args) {
+        Test02 test02 = new Test02();
+        test02.setName("Server");
+        test02.start();
     }
 
     private void init(){
@@ -125,7 +133,7 @@ public class FSImageUploadServer extends Thread{
                 return;
             }
             // 先把上一次的fsimage文件删除
-            String fsimageFilePath = "F:\\editslog\\fsimage.meta";
+            String fsimageFilePath = "F:\\backupnode\\fsimage.meta";
             File fsimageFile = new File(fsimageFilePath);
             if(fsimageFile.exists()) {
                 fsimageFile.delete();
@@ -182,3 +190,4 @@ public class FSImageUploadServer extends Thread{
         }
     }
 }
+

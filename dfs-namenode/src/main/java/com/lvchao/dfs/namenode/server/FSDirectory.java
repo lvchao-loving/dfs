@@ -7,14 +7,22 @@ import java.util.List;
  * 负责管理内存中的文件目录树的核心组件
  */
 public class FSDirectory {
-	
+
 	/**
 	 * 内存中的文件目录树，有父子层级关系的数据结构
 	 */
-	private INodeDirectory dirTree;
-	
+	private INode dirTree;
+
+	public INode getDirTree() {
+		return dirTree;
+	}
+
+	public void setDirTree(INode dirTree) {
+		this.dirTree = dirTree;
+	}
+
 	public FSDirectory() {
-		this.dirTree = new INodeDirectory("/");  
+		this.dirTree = new INode("/");  
 	}
 	
 	/**
@@ -25,20 +33,20 @@ public class FSDirectory {
 	
 		synchronized(dirTree) {
 			String[] pathes = path.split("/");
-			INodeDirectory parent = dirTree;
+			INode parent = dirTree;
 			
 			for(String splitedPath : pathes) {
 				if(splitedPath.trim().equals("")) {
 					continue;
 				}
 				
-				INodeDirectory dir = findDirectory(parent, splitedPath);
+				INode dir = findDirectory(parent, splitedPath);
 				if(dir != null) {
 					parent = dir;
 					continue;
 				}
 				
-				INodeDirectory child = new INodeDirectory(splitedPath); 
+				INode child = new INode(splitedPath); 
 				parent.addChild(child);
 				parent = child;
 			}
@@ -47,32 +55,37 @@ public class FSDirectory {
 		//printDirTree(dirTree, "");
 	}
 
-	/*private void printDirTree(INodeDirectory dirTree, String blank) {
+	/**
+	 * 文件目录树的打印
+	 * @param dirTree
+	 * @param blank
+	 */
+	public void printDirTree(INode dirTree, String blank) {
 		if(dirTree.getChildren().size() == 0) {
 			return;
 		}
 		for(INode dir : dirTree.getChildren()) {
-			ThreadUntils.println(blank + ((INodeDirectory) dir).getPath());
-			printDirTree((INodeDirectory) dir, blank + " ");
+			ThreadUntils.println(blank + ((INode) dir).getPath());
+			printDirTree((INode) dir, blank + " ");
 		}
-	}*/
-	
+	}
+
 	/**
 	 * 对文件目录树递归查找目录
 	 * @param dir
 	 * @param path
 	 * @return
 	 */
-	private INodeDirectory findDirectory(INodeDirectory dir, String path) {
+	private INode findDirectory(INode dir, String path) {
 		if(dir.getChildren().size() == 0) {
 			return null;
 		}
 		
-		INodeDirectory resultDir = null;
+		INode resultDir = null;
 		
 		for(INode child : dir.getChildren()) {
-			if(child instanceof INodeDirectory) {
-				INodeDirectory childDir = (INodeDirectory) child;
+			if(child instanceof INode) {
+				INode childDir = (INode) child;
 				
 				if((childDir.getPath().equals(path))) {
 					return childDir;
@@ -83,23 +96,17 @@ public class FSDirectory {
 		return null;
 	}
 	
-	
-	/**
-	 * 代表的是文件目录树中的一个节点
-	 */
-	private interface INode {
-		
-	}
-	
 	/**
 	 * 代表文件目录树中的一个目录
 	 */
-	public static class INodeDirectory implements INode {
+	public static class INode {
 		
 		private String path;
 		private List<INode> children;
-		
-		public INodeDirectory(String path) {
+
+		public INode(){}
+
+		public INode(String path) {
 			this.path = path;
 			this.children = new LinkedList<INode>();
 		}
@@ -123,33 +130,10 @@ public class FSDirectory {
 
 		@Override
 		public String toString() {
-			return "INodeDirectory{" +
+			return "INode{" +
 					"path='" + path + '\'' +
 					", children=" + children +
 					'}';
 		}
 	}
-	
-	/**
-	 * 代表文件目录树中的一个文件
-	 */
-	public static class INodeFile implements INode {
-		
-		private String name;
-
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public String toString() {
-			return "INodeFile{" +
-					"name='" + name + '\'' +
-					'}';
-		}
-	}
-	
 }

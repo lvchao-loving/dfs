@@ -24,7 +24,7 @@ public class FSImageCheckpointer extends Thread{
      * checkpoint 操作的时间间隔
      */
     // public static final Integer CHECKPOINT_INTERVAL = 1 * 60 * 60 * 1000;
-    public static final Integer CHECKPOINT_INTERVAL = 1 * 30 * 1000;
+    public static final Integer CHECKPOINT_INTERVAL = 2 * 30 * 1000;
 
     private BackupNode backupNode;
 

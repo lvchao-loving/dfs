@@ -1,10 +1,15 @@
 package com.lvchao.dfs.namenode.server;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.RandomAccessFile;
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 /**
  * 负责管理元数据的核心组件
@@ -23,10 +28,14 @@ public class FSNamesystem {
 	 * 最近一次checkpoint更新到的txid，初始化id
 	 */
 	private Long checkpointTxid = 0L;
+
+	private String checkpintTxidFilePath = "F:\\editslog\\checkpoint-txid.meta";
 	
 	public FSNamesystem() {
 		this.directory = new FSDirectory();
 		this.editlog = new FSEditlog(this);
+		// 加载磁盘 fsimage 文件元数据
+		recoverNamespace();
 	}
 	
 	/**
@@ -70,7 +79,7 @@ public class FSNamesystem {
 	public void saveCheckPointTxid(){
 		try {
 			// 先把上一次的fsimage文件删除
-			String filePath = "F:\\editslog\\checkpoint-txid.meta";
+			String filePath = checkpintTxidFilePath;
 			File file = new File(filePath);
 			if(file.exists()) {
 				file.delete();
@@ -89,5 +98,151 @@ public class FSNamesystem {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * 恢复元数据
+	 */
+	public void recoverNamespace() {
+		// 加载 BackupNode 节点发送过来的fsimage 文件直接记载到内存中
+		loadFSImage();
+		// 加载 checkpointTxid 到内存中
+		loadCheckpointTxid();
+		// 加载 editslog 日志文件结合 checkpointTxid
+		loadEditsLog();
+	}
+
+	/**
+	 *  加载磁盘中的 editslog 日志文件恢复到文件目录树中
+	 */
+	private void loadEditsLog() {
+		try {
+			String fileDirectory = "F:\\editslog";
+			String fileNamePrefix = "edits-";
+			File fileAll = new File(fileDirectory);
+
+			List<File> fileList = new ArrayList<>();
+
+			// 收集需要排序的文件
+			for (File file:fileAll.listFiles()){
+				if (file.isFile() && file.getName().contains(fileNamePrefix)){
+					fileList.add(file);
+				}
+			}
+			if (fileList.size() == 0){
+				ThreadUntils.println("无 fsimage 文件不需要文件恢复");
+				return;
+			}
+
+			// 根据文件名称排序
+			Collections.sort(fileList, new Comparator<File>() {
+				@Override
+				public int compare(File o1, File o2) {
+					Integer o1Sequence = Integer.valueOf(o1.getName().split("-")[1]);
+					Integer o2Sequence = Integer.valueOf(o2.getName().split("-")[1]);
+					return o1Sequence - o2Sequence;
+				}
+			});
+
+			for (File file:fileList){
+				List<String> fileLineContent = Files.readAllLines(Paths.get(file.getPath()), StandardCharsets.UTF_8);
+				for (String lineContent:fileLineContent){
+					JSONObject jsonObject = JSONObject.parseObject(lineContent);
+					Long txid = jsonObject.getLongValue("txid");
+					if (txid > checkpointTxid){
+						System.out.println("准备回放数据：" + lineContent);
+						// 回放数据到内存中
+						String op = jsonObject.getString("OP");
+						if ("MKDIR".equals(op)){
+							directory.mkdir(jsonObject.getString("PATH"));
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 加载持久化磁盘中的 checkpointTxid
+	 */
+	private void loadCheckpointTxid() {
+		try {
+			// 先把上一次的fsimage文件删除
+			String filePath = checkpintTxidFilePath;
+			File file = new File(filePath);
+			if(!file.exists()) {
+				ThreadUntils.println("启动恢复checkpointTxid 文件不存在!");
+				return;
+			}
+			try (
+					RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+					FileInputStream fileInputStream = new FileInputStream(randomAccessFile.getFD());
+					FileChannel fileChannel = fileInputStream.getChannel();
+			){
+				ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+				StringBuilder message = new StringBuilder();
+				while (true) {
+					if (fileChannel.read(byteBuffer) <= 0) {
+						ThreadUntils.println("退出读取文件循环");
+						break;
+					}
+					byteBuffer.flip();
+					message.append(StandardCharsets.UTF_8.decode(byteBuffer).toString());
+					byteBuffer.clear();
+				}
+				this.checkpointTxid = Long.valueOf(StringUtils.isBlank(message.toString())? "0" : message.toString());
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 加载 fsimage 文件到内存里进行恢复
+	 */
+	public void loadFSImage(){
+		String path = "F:\\editslog\\fsimage.meta";
+		File file = new File(path);
+		// 文件不存在则说明不需要恢复
+		if (!file.exists()){
+			ThreadUntils.println("fsimage文件不存在，不需要进行恢复");
+			return;
+		}
+		try (
+			FileInputStream fileInputStream = new FileInputStream(path);
+			FileChannel fileChannel = fileInputStream.getChannel();
+		){
+			ByteBuffer byteBuffer = ByteBuffer.allocate(1024 * 1024);
+			StringBuilder fsimageSB = new StringBuilder();
+			while (true) {
+				if (fileChannel.read(byteBuffer) <= 0) {
+					ThreadUntils.println("退出读取文件循环");
+					break;
+				}
+				byteBuffer.flip();
+				fsimageSB.append(StandardCharsets.UTF_8.decode(byteBuffer).toString());
+				byteBuffer.clear();
+			}
+			FSDirectory.INode iNode = JSONObject.parseObject(fsimageSB.toString(), FSDirectory.INode.class);
+			directory.setDirTree(iNode);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public String getCheckpintTxidFilePath() {
+		return checkpintTxidFilePath;
+	}
+
+	public void setCheckpintTxidFilePath(String checkpintTxidFilePath) {
+		this.checkpintTxidFilePath = checkpintTxidFilePath;
+	}
+
+	public static void main(String[] args) throws Exception {
+		FSNamesystem fsNamesystem = new FSNamesystem();
 	}
 }
