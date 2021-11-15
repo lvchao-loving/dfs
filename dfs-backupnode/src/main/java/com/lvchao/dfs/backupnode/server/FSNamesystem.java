@@ -27,7 +27,12 @@ public class FSNamesystem {
      * 记录上一次 checkpint的时间
      */
     private Long checkpointTime = System.currentTimeMillis();
+
     private String checkpointFile = "";
+    /**
+     * 是否完成 BackupNode节点元数据的恢复
+     * 注意：使用了 volatile 关键字，保证了多线程之间的可见性
+     */
     private volatile boolean finishedRecover = false;
 
     public FSNamesystem() {
@@ -76,9 +81,9 @@ public class FSNamesystem {
      * 恢复 BackupNode 内存目录树
      */
     private void recoverNamespace() {
-        finishedRecover = true;
         loadCheckpointInfo();
         loadFSImage();
+        finishedRecover = true;
     }
 
     public FSDirectory getDirectory() {
@@ -112,7 +117,7 @@ public class FSNamesystem {
         String filePath = "F:\\backupnode\\fsimage-" + directory.getMaxTxid() + ".meta";
         File file = new File(filePath);
         if (!file.exists()){
-            ThreadUntils.println("文件不存在：" + filePath);
+            ThreadUntils.println("恢复 fsimage 信息中发现文件不存在：" + filePath);
             return;
         }
         try (
@@ -131,6 +136,7 @@ public class FSNamesystem {
 
             FSDirectory.INode dirTree = JSONObject.parseObject(fileContent, FSDirectory.INode.class);
             directory.setDirTree(dirTree);
+            ThreadUntils.println("恢复 fsimage 信息完成");
         } catch (IOException e) {
             ThreadUntils.println("读取文件内容异常");
             e.printStackTrace();
@@ -144,7 +150,7 @@ public class FSNamesystem {
         String filePath = "F:\\backupnode\\checkpoint-info.meta";
         File file = new File(filePath);
         if (!file.exists()){
-            ThreadUntils.println("文件不存在：" + filePath);
+            ThreadUntils.println("恢复 checkpoint 信息中发现文件不存在：" + filePath);
             return;
         }
         try (
@@ -171,6 +177,8 @@ public class FSNamesystem {
             this.checkpointFile = fsimageFile;
 
             directory.setMaxTxid(syncedTxid);
+
+            ThreadUntils.println("恢复 checkpoint 信息完成");
         } catch (IOException e) {
             ThreadUntils.println("读取文件内容异常");
             e.printStackTrace();

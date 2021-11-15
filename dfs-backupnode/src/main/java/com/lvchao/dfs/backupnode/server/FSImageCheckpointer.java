@@ -21,7 +21,7 @@ public class FSImageCheckpointer extends Thread{
      * checkpoint 操作的时间间隔
      * public static final Integer CHECKPOINT_INTERVAL = 1 * 60 * 60 * 1000;
      */
-    public static final Integer CHECKPOINT_INTERVAL = 2 * 30 * 1000;
+    public static final Integer CHECKPOINT_INTERVAL = 1 * 30 * 1000;
 
     private BackupNode backupNode;
 
@@ -34,15 +34,15 @@ public class FSImageCheckpointer extends Thread{
      */
     private String lastFsimageFile = "";
 
-    public FSImageCheckpointer(BackupNode backupNode, FSNamesystem fsNamesystem, NameNodeRpcClient nameNode){
+    public FSImageCheckpointer(BackupNode backupNode){
         this.backupNode = backupNode;
-        this.fsNamesystem = fsNamesystem;
-        this.nameNode = nameNode;
+        this.fsNamesystem = backupNode.getFsNamesystem();
+        this.nameNode = backupNode.getNameNode();
     }
 
     @Override
     public void run() {
-        ThreadUntils.println("fsimage checkpoint定时调度线程启动...");
+        ThreadUntils.println("FSImageCheckpointer 线程已经启动...");
         while (backupNode.isRunning()){
             try {
                 // 判断是否
@@ -57,8 +57,9 @@ public class FSImageCheckpointer extends Thread{
                 }
 
                 if (System.currentTimeMillis() - fsNamesystem.getCheckpointTime() > CHECKPOINT_INTERVAL){
-                    if(!nameNode.getNamenodeRunning()) {
-                        ThreadUntils.println("namenode当前无法访问，不执行checkpoint......");
+                    if(!nameNode.isNamenodeRunning()) {
+                        ThreadUntils.println("namenode当前无法访问，不执行checkpoint......目前睡眠1秒钟后重试");
+                        Thread.sleep(1000);
                         continue;
                     }
 

@@ -22,7 +22,7 @@ public class FSDirectory {
     private INode dirTree;
 
     /**
-     *
+     * 记录当前 Inode 节点中对应操作的 txid
      */
     private Long maxTxid = 0L;
     /**

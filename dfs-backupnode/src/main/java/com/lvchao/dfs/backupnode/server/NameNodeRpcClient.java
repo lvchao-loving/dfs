@@ -27,14 +27,22 @@ public class NameNodeRpcClient {
     /**
      * namenode 是否正常运行标识，默认 运行（true）
      */
-    private Boolean isNamenodeRunning = true;
+    private boolean namenodeRunning = true;
 
-    public Boolean getNamenodeRunning() {
-        return isNamenodeRunning;
+    public NameNodeServiceGrpc.NameNodeServiceBlockingStub getNamenode() {
+        return namenode;
     }
 
-    public void setNamenodeRunning(Boolean namenodeRunning) {
-        this.isNamenodeRunning = namenodeRunning;
+    public boolean isNamenodeRunning() {
+        return namenodeRunning;
+    }
+
+    public void setNamenode(NameNodeServiceGrpc.NameNodeServiceBlockingStub namenode) {
+        this.namenode = namenode;
+    }
+
+    public void setNamenodeRunning(boolean namenodeRunning) {
+        this.namenodeRunning = namenodeRunning;
     }
 
     /**
@@ -54,7 +62,6 @@ public class NameNodeRpcClient {
      * @return
      */
     public JSONArray fetchEditsLog(Long syncedTxid) {
-        Integer fetchEditsLogCode = 1;
         FetchEditsLogRequest request = FetchEditsLogRequest.newBuilder().setSyncedTxid(syncedTxid).build();
 
         FetchEditsLogResponse response = namenode.fetchEditsLog(request);

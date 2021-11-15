@@ -18,19 +18,19 @@ public class FileSystemTest {
 
     public static void main(String[] args) throws Exception {
         FileSystem fileSystem = new FileSystemImpl();
-       /* for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 10; i++) {
             new Thread(()->{
                 Random random = new Random();
                 for (int j = 1; j <= 100; j++) {
                     try {
-                        fileSystem.mkdir("/usr/local/lvchao" + atomicInteger.getAndIncrement());
+                        fileSystem.mkdir("/usr/local/lvchao1" + atomicInteger.getAndIncrement());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             },"threadName" + i).start();
-        }*/
+        }
 
-        fileSystem.shutdown();
+       // fileSystem.shutdown();
     }
 }

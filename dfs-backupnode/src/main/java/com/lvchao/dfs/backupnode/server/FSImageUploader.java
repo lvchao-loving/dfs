@@ -71,7 +71,8 @@ public class FSImageUploader extends Thread{
             }
 
         }catch (Exception exception){
-            exception.printStackTrace();
+            // TODO 将异常同步到 BackupNode节点
+            ThreadUntils.println("FSImageUploader 线程发送fsimage文件异常");
         }finally {
             if (socketChannel != null){
                 try {

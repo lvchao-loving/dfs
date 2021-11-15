@@ -13,9 +13,9 @@ import java.util.Date;
  */
 public class ThreadUntils {
 
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static void println(String data){
-        System.out.println("【" + simpleDateFormat.format(new Date())+ "-" + Thread.currentThread().getName() + "】" + data);
+        System.out.println("【" + simpleDateFormat.format(new Date())+ "   " + Thread.currentThread().getName() + "】" + data);
     }
 }

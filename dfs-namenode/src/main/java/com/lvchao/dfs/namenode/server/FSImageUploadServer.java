@@ -141,7 +141,6 @@ public class FSImageUploadServer extends Thread{
                 }
                 do {
                     buffer.flip();
-                    ThreadUntils.println("接收到的数据写入文件：" + StandardCharsets.UTF_8.decode(buffer));
                     buffer.rewind();
                     fsimageFileChannel.write(buffer);
                     buffer.clear();
