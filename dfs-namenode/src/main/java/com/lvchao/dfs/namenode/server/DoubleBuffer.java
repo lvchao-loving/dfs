@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -15,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @Package: com.lvchao.dfs.namenode.server
  * @Description: 内存双缓冲
  * @auther: chao.lv
- * @date: 2021/10/25 13:37
+ * @date: 2021/11/19 7:22
  * @version: V1.0
  */
 public class DoubleBuffer {
@@ -172,8 +171,6 @@ public class DoubleBuffer {
                 }
             }
             this.startTxid = endTxid + 1;
-
-            //return new EditslogInfo(startTxid, endTxid, editsLogFilePath);
         }
 
         /**

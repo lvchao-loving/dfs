@@ -74,6 +74,26 @@ public final class NameNodeRpcModel {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_com_lvchao_dfs_namenode_rpc_UpdateCheckpointTxidResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileRequest_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_lvchao_dfs_namenode_rpc_CreateFileRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileResponse_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_lvchao_dfs_namenode_rpc_CreateFileResponse_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesRequest_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesRequest_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -84,21 +104,26 @@ public final class NameNodeRpcModel {
   static {
     java.lang.String[] descriptorData = {
       "\n\026NameNodeRpcModel.proto\022\033com.lvchao.dfs" +
-      ".namenode.rpc\"/\n\017RegisterRequest\022\n\n\002ip\030\001" +
-      " \001(\t\022\020\n\010hostname\030\002 \001(\t\"\"\n\020RegisterRespon" +
-      "se\022\016\n\006status\030\001 \001(\005\"0\n\020HeartbeatRequest\022\n" +
-      "\n\002ip\030\001 \001(\t\022\020\n\010hostname\030\002 \001(\t\"#\n\021Heartbea" +
-      "tResponse\022\016\n\006status\030\001 \001(\005\"\034\n\014MkdirReques" +
-      "t\022\014\n\004path\030\001 \001(\t\"\037\n\rMkdirResponse\022\016\n\006stat" +
-      "us\030\001 \001(\005\"\037\n\017ShutdownRequest\022\014\n\004code\030\001 \001(" +
-      "\005\"\"\n\020ShutdownResponse\022\016\n\006status\030\001 \001(\005\"*\n" +
-      "\024FetchEditsLogRequest\022\022\n\nsyncedTxid\030\001 \001(",
-      "\003\")\n\025FetchEditsLogResponse\022\020\n\010editsLog\030\001" +
-      " \001(\t\"+\n\033UpdateCheckpointTxidRequest\022\014\n\004t" +
-      "xid\030\001 \001(\003\".\n\034UpdateCheckpointTxidRespons" +
-      "e\022\016\n\006status\030\001 \001(\005B7\n!com.lvchao.dfs.name" +
-      "node.rpc.modelB\020NameNodeRpcModelP\001b\006prot" +
-      "o3"
+      ".namenode.rpc\"@\n\017RegisterRequest\022\n\n\002ip\030\001" +
+      " \001(\t\022\020\n\010hostname\030\002 \001(\t\022\017\n\007nioPort\030\003 \001(\005\"" +
+      "\"\n\020RegisterResponse\022\016\n\006status\030\001 \001(\005\"A\n\020H" +
+      "eartbeatRequest\022\n\n\002ip\030\001 \001(\t\022\020\n\010hostname\030" +
+      "\002 \001(\t\022\017\n\007nioPort\030\003 \001(\005\"#\n\021HeartbeatRespo" +
+      "nse\022\016\n\006status\030\001 \001(\005\"\034\n\014MkdirRequest\022\014\n\004p" +
+      "ath\030\001 \001(\t\"\037\n\rMkdirResponse\022\016\n\006status\030\001 \001" +
+      "(\005\"\037\n\017ShutdownRequest\022\014\n\004code\030\001 \001(\005\"\"\n\020S" +
+      "hutdownResponse\022\016\n\006status\030\001 \001(\005\"*\n\024Fetch",
+      "EditsLogRequest\022\022\n\nsyncedTxid\030\001 \001(\003\")\n\025F" +
+      "etchEditsLogResponse\022\020\n\010editsLog\030\001 \001(\t\"+" +
+      "\n\033UpdateCheckpointTxidRequest\022\014\n\004txid\030\001 " +
+      "\001(\003\".\n\034UpdateCheckpointTxidResponse\022\016\n\006s" +
+      "tatus\030\001 \001(\005\"%\n\021CreateFileRequest\022\020\n\010file" +
+      "name\030\001 \001(\t\"$\n\022CreateFileResponse\022\016\n\006stat" +
+      "us\030\001 \001(\005\">\n\030AllocateDataNodesRequest\022\020\n\010" +
+      "filename\030\001 \001(\t\022\020\n\010fileSize\030\002 \001(\003\".\n\031Allo" +
+      "cateDataNodesResponse\022\021\n\tdatanodes\030\001 \001(\t" +
+      "B7\n!com.lvchao.dfs.namenode.rpc.modelB\020N",
+      "ameNodeRpcModelP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -117,7 +142,7 @@ public final class NameNodeRpcModel {
     internal_static_com_lvchao_dfs_namenode_rpc_RegisterRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_lvchao_dfs_namenode_rpc_RegisterRequest_descriptor,
-        new java.lang.String[] { "Ip", "Hostname", });
+        new java.lang.String[] { "Ip", "Hostname", "NioPort", });
     internal_static_com_lvchao_dfs_namenode_rpc_RegisterResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_com_lvchao_dfs_namenode_rpc_RegisterResponse_fieldAccessorTable = new
@@ -129,7 +154,7 @@ public final class NameNodeRpcModel {
     internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatRequest_descriptor,
-        new java.lang.String[] { "Ip", "Hostname", });
+        new java.lang.String[] { "Ip", "Hostname", "NioPort", });
     internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_fieldAccessorTable = new
@@ -184,6 +209,30 @@ public final class NameNodeRpcModel {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_lvchao_dfs_namenode_rpc_UpdateCheckpointTxidResponse_descriptor,
         new java.lang.String[] { "Status", });
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileRequest_descriptor =
+      getDescriptor().getMessageTypes().get(12);
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_lvchao_dfs_namenode_rpc_CreateFileRequest_descriptor,
+        new java.lang.String[] { "Filename", });
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileResponse_descriptor =
+      getDescriptor().getMessageTypes().get(13);
+    internal_static_com_lvchao_dfs_namenode_rpc_CreateFileResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_lvchao_dfs_namenode_rpc_CreateFileResponse_descriptor,
+        new java.lang.String[] { "Status", });
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesRequest_descriptor =
+      getDescriptor().getMessageTypes().get(14);
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesRequest_descriptor,
+        new java.lang.String[] { "Filename", "FileSize", });
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor =
+      getDescriptor().getMessageTypes().get(15);
+    internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor,
+        new java.lang.String[] { "Datanodes", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

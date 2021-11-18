@@ -20,7 +20,11 @@ public class DataNode {
 	private void initialize() {
 		this.shouldRun = true;
 		this.offerService = new NameNodeOfferService();
-		this.offerService.start();  
+		this.offerService.start();
+
+		// 创建上传图片线程
+		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer();
+		dataNodeNIOServer.start();
 	}
 	
 	/**

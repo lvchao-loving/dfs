@@ -16,21 +16,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileSystemTest {
     public static AtomicInteger atomicInteger = new AtomicInteger(1);
 
+    private static FileSystem filesystem = new FileSystemImpl();
+
     public static void main(String[] args) throws Exception {
-        FileSystem fileSystem = new FileSystemImpl();
+        // testMkdir();
+        // testShutdown();
+        testCreateFile();
+    }
+
+    private static void testMkdir() throws Exception {
         for (int i = 1; i <= 10; i++) {
             new Thread(()->{
                 Random random = new Random();
                 for (int j = 1; j <= 100; j++) {
                     try {
-                        fileSystem.mkdir("/usr/local/lvchao1" + atomicInteger.getAndIncrement());
+                        filesystem.mkdir("/usr/local/lvchao1" + atomicInteger.getAndIncrement());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             },"threadName" + i).start();
         }
+    }
 
-       // fileSystem.shutdown();
+    private static void testShutdown() throws Exception {
+        filesystem.shutdown();
+    }
+
+    private static void testCreateFile() throws Exception {
+        filesystem.upload(null, "/image/product/iphone001.jpg",512L);
     }
 }

@@ -1,6 +1,7 @@
 package com.lvchao.dfs.backupnode.server;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -120,6 +121,71 @@ public class FSDirectory {
 
         // printDirTree(dirTree, "");
     }
+
+    /**
+     * 创建文件
+     * @param txid
+     * @param filename
+     * @return
+     */
+    public Boolean create(Long txid , String filename) {
+        // 保证多线程之间的安全性
+        try {
+            writeLock();
+
+            maxTxid = txid;
+
+            String[] split = filename.split("/");
+            String readFilename = split[split.length - 1];
+
+            // 添加文件目录树
+            INode parent = dirTree;
+            for (int i = 0; i < split.length - 1; i++) {
+                if (StringUtils.isBlank(split[i]) || "/".equals(split[i])){
+                    continue;
+                }
+
+                INode dir = findDirectory(parent,split[i]);
+                if (dir != null){
+                    parent = dir;
+                    continue;
+                }
+
+                INode child = new INode(split[i]);
+                parent.addChild(child);
+                parent = child;
+            }
+
+            // 判断文件是否已存在
+            if (existFile(parent,readFilename)){
+                return false;
+            }
+
+            // 在文件目录数中添加一个文件
+            INode file = new INode(readFilename);
+            parent.addChild(file);
+            return true;
+
+        }finally {
+            writeUnLock();
+        }
+    }
+
+    /**
+     * 判断目录下是否存在指定名称的文件
+     * @return
+     */
+    private Boolean existFile(INode dir, String filename){
+        if (dir.getChildren() != null && dir.getChildren().size() > 0){
+            for (INode child:dir.getChildren()){
+                if (child.getPath().equals(filename)){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * 打印创建的目录

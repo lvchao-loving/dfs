@@ -19,6 +19,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	public static final Integer STATUS_SUCCESS = 1;
 	public static final Integer STATUS_FAILURE = 2;
 	public static final Integer STATUS_SHUTDOWN = 3;
+	public static final Integer STATUS_DUPLICATE = 4;
 
 	/**
 	 * BackupNode 节点拉取数据的大小
@@ -64,7 +65,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	@Override
 	public void register(RegisterRequest request, 
 			StreamObserver<RegisterResponse> responseObserver) {
-		datanodeManager.register(request.getIp(), request.getHostname());
+		datanodeManager.register(request.getIp(), request.getHostname(), request.getNioPort());
 		
 		RegisterResponse response = RegisterResponse.newBuilder()
 				.setStatus(STATUS_SUCCESS)
@@ -226,6 +227,51 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void create(CreateFileRequest request, StreamObserver<CreateFileResponse> responseObserver) {
+		try {
+			CreateFileResponse response = null;
+
+			if(!isRunning) {
+				response = CreateFileResponse.newBuilder()
+						.setStatus(STATUS_SHUTDOWN)
+						.build();
+			} else {
+				String filename = request.getFilename();
+				Boolean success = namesystem.create(filename);
+
+				if(success) {
+					response = CreateFileResponse.newBuilder()
+							.setStatus(STATUS_SUCCESS)
+							.build();
+				} else {
+					response = CreateFileResponse.newBuilder()
+							.setStatus(STATUS_DUPLICATE)
+							.build();
+				}
+			}
+
+			responseObserver.onNext(response);
+			responseObserver.onCompleted();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void allocateDataNodes(AllocateDataNodesRequest request, StreamObserver<AllocateDataNodesResponse> responseObserver) {
+		Long fileSize = request.getFileSize();
+		List<DataNodeInfo> datanodes = datanodeManager.allocateDataNodes(fileSize);
+		String datanodesJson = JSONArray.toJSONString(datanodes);
+
+		AllocateDataNodesResponse response = AllocateDataNodesResponse.newBuilder()
+				.setDatanodes(datanodesJson)
+				.build();
+
+		responseObserver.onNext(response);
+		responseObserver.onCompleted();
 	}
 
 	/**

@@ -1,84 +1,114 @@
 package com.lvchao.dfs.namenode.server;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
- * 这个组件，就是负责管理集群里的所有的datanode的
+ * @Title: DataNodeManager
+ * @Package: com.lvchao.dfs.namenode.server
+ * @Description: 负责管理集群中所有的 DataNode节点
+ * @auther: chao.lv
+ * @date: 2021/11/19 6:56
+ * @version: V1.0
  */
 public class DataNodeManager {
+    /**
+     * 集群中所有的datanode
+     */
+    private Map<String, DataNodeInfo> datanodeInfoMap = new ConcurrentHashMap<String, DataNodeInfo>();
 
-	/**
-	 * 集群中所有的datanode
-	 */
-	private Map<String, DataNodeInfo> datanodes = 
-			new ConcurrentHashMap<String, DataNodeInfo>();
-	
-	public DataNodeManager() {
-		new DataNodeAliveMonitor().start();
-	}
-	
-	/**
-	 * datanode进行注册
-	 * @param ip 
-	 * @param hostname
-	 */
-	public Boolean register(String ip, String hostname) {
-		DataNodeInfo datanode = new DataNodeInfo(ip, hostname);
-		datanodes.put(ip + "-" + hostname, datanode);  
-		ThreadUntils.println("DataNode注册：ip=" + ip + ",hostname=" + hostname);  
-		return true;
-	}
-	
-	/**
-	 * datanode进行心跳
-	 * @param ip
-	 * @param hostname
-	 * @return
-	 */
-	public Boolean heartbeat(String ip, String hostname) {
-		DataNodeInfo datanode = datanodes.get(ip + "-" + hostname);
-		datanode.setLatestHeartbeatTime(System.currentTimeMillis());  
-		ThreadUntils.println("DataNode发送心跳：ip=" + ip + ",hostname=" + hostname);  
-		return true;
-	}
-	
-	/**
-	 * datanode是否存活的监控线程
-	 */
-	class DataNodeAliveMonitor extends Thread {
-		
-		@Override
-		public void run() {
-			try {
-				while(true) {
-					List<String> toRemoveDatanodes = new ArrayList<String>();
-					
-					Iterator<DataNodeInfo> datanodesIterator = datanodes.values().iterator();
-					DataNodeInfo datanode = null;
-					while(datanodesIterator.hasNext()) {
-						datanode = datanodesIterator.next();
-						if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 90 * 1000) {
-							toRemoveDatanodes.add(datanode.getIp() + "-" + datanode.getHostname());
-						}
-					}
-					
-					if(!toRemoveDatanodes.isEmpty()) {
-						for(String toRemoveDatanode : toRemoveDatanodes) {
-							datanodes.remove(toRemoveDatanode);
-						}
-					}
-					
-					Thread.sleep(30 * 1000); 
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
+    public DataNodeManager() {
+        // 启动内部监控线程
+        DataNodeAliveMonitor dataNodeAliveMonitor = new DataNodeAliveMonitor();
+        dataNodeAliveMonitor.setName("DataNodeAliveMonitor");
+        dataNodeAliveMonitor.start();
+    }
+
+    /**
+     * datanode进行注册
+     * @param ip
+     * @param hostname
+     */
+    public Boolean register(String ip, String hostname,Integer nioPort) {
+        DataNodeInfo datanode = new DataNodeInfo(ip, hostname,nioPort);
+        datanodeInfoMap.put(ip + "-" + hostname, datanode);
+        ThreadUntils.println("DataNode注册：ip=" + ip + ",hostname=" + hostname + ",nioPort=" + nioPort);
+        return true;
+    }
+
+    /**
+     * datanode进行心跳
+     * @param ip
+     * @param hostname
+     * @return
+     */
+    public Boolean heartbeat(String ip, String hostname) {
+        DataNodeInfo datanode = datanodeInfoMap.get(ip + "-" + hostname);
+        datanode.setLatestHeartbeatTime(System.currentTimeMillis());
+        ThreadUntils.println("DataNode发送心跳：ip=" + ip + ",hostname=" + hostname);
+        return true;
+    }
+
+    /**
+     * 根据上传的文件大小，分配双副本对应的数据节点
+     * @param fileSize
+     * @return
+     */
+    public List<DataNodeInfo> allocateDataNodes(Long fileSize){
+        synchronized (this){
+
+            List<DataNodeInfo> dataNodeInfoList = new ArrayList<>();
+            for (String dniKey:datanodeInfoMap.keySet()){
+                dataNodeInfoList.add(datanodeInfoMap.get(dniKey));
+            }
+
+            if (dataNodeInfoList.size() < 2){
+                throw new RuntimeException("DataNodeInfo 注册的节点过少");
+            }
+
+            if (dataNodeInfoList.size() == 2){
+                return dataNodeInfoList;
+            }
+
+            return dataNodeInfoList.stream().sorted(Comparator.comparing(DataNodeInfo::getStoredDataSize)).collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * datanode是否存活的监控线程
+     */
+    class DataNodeAliveMonitor extends Thread {
+
+        @Override
+        public void run() {
+            try {
+                while(true) {
+                    List<String> toRemoveDatanodes = new ArrayList<String>();
+
+                    Iterator<DataNodeInfo> datanodesIterator = datanodeInfoMap.values().iterator();
+                    DataNodeInfo datanode = null;
+                    while(datanodesIterator.hasNext()) {
+                        datanode = datanodesIterator.next();
+                        if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 90 * 1000) {
+                            toRemoveDatanodes.add(datanode.getIp() + "-" + datanode.getHostname());
+                        }
+                    }
+
+                    if(!toRemoveDatanodes.isEmpty()) {
+                        synchronized (this){
+                            for(String toRemoveDatanode : toRemoveDatanodes) {
+                                datanodeInfoMap.remove(toRemoveDatanode);
+                            }
+                        }
+                    }
+
+                    Thread.sleep(30 * 1000);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 }

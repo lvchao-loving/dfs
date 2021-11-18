@@ -44,19 +44,6 @@ public class FSEditlog {
 	 */
 	private ThreadLocal<Long> localTxid = new ThreadLocal<Long>();
 
-	/**
-	 * 存储持久化到磁盘的配置的记录，升序排列
-	 */
-	private List<EditslogInfo> editslogInfoList = new ArrayList<>();
-	// 就会导致说，对一个共享的map数据结构出现多线程并发的读写的问题
-	// 此时对这个map的读写是不是就需要加锁了
-	//	private Map<Thread, Long> txidMap = new HashMap<Thread, Long>();
-
-	public List<EditslogInfo> getEditslogInfoList() {
-		return editslogInfoList;
-	}
-
-
 	public FSEditlog(FSNamesystem fsNamesystem){
 		this.fsNamesystem = fsNamesystem;
 		// 启动初始本地 EditsLog 磁盘文件，根据 BackupNode 发送过来的最大 txid 删除之前的磁盘文件

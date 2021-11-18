@@ -24,8 +24,8 @@ public final class NameNodeServer {
   static {
     java.lang.String[] descriptorData = {
       "\n\027NameNodeRpcServer.proto\022\033com.lvchao.df" +
-      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\265" +
-      "\005\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
+      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\245" +
+      "\007\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
       "hao.dfs.namenode.rpc.RegisterRequest\032-.c" +
       "om.lvchao.dfs.namenode.rpc.RegisterRespo" +
       "nse\022j\n\theartbeat\022-.com.lvchao.dfs.nameno" +
@@ -42,7 +42,13 @@ public final class NameNodeServer {
       "ateCheckpointTxid\0228.com.lvchao.dfs.namen" +
       "ode.rpc.UpdateCheckpointTxidRequest\0329.co" +
       "m.lvchao.dfs.namenode.rpc.UpdateCheckpoi" +
-      "ntTxidResponseB7\n#com.lvchao.dfs.namenod",
+      "ntTxidResponse\022i\n\006create\022..com.lvchao.df",
+      "s.namenode.rpc.CreateFileRequest\032/.com.l" +
+      "vchao.dfs.namenode.rpc.CreateFileRespons" +
+      "e\022\202\001\n\021allocateDataNodes\0225.com.lvchao.dfs" +
+      ".namenode.rpc.AllocateDataNodesRequest\0326" +
+      ".com.lvchao.dfs.namenode.rpc.AllocateDat" +
+      "aNodesResponseB7\n#com.lvchao.dfs.namenod" +
       "e.rpc.serviceB\016NameNodeServerP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =

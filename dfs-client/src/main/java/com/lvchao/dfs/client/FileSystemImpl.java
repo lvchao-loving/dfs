@@ -1,9 +1,6 @@
 package com.lvchao.dfs.client;
 
-import com.lvchao.dfs.namenode.rpc.model.MkdirRequest;
-import com.lvchao.dfs.namenode.rpc.model.MkdirResponse;
-import com.lvchao.dfs.namenode.rpc.model.ShutdownRequest;
-import com.lvchao.dfs.namenode.rpc.model.ShutdownResponse;
+import com.lvchao.dfs.namenode.rpc.model.*;
 import com.lvchao.dfs.namenode.rpc.service.NameNodeServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NegotiationType;
@@ -45,5 +42,44 @@ public class FileSystemImpl implements FileSystem{
         ShutdownResponse shutdownResponse = namenode.shutdown(shutdownRequest);
 
         ThreadUntils.println("关闭请求的响应：" + shutdownResponse.getStatus());
+    }
+
+    @Override
+    public Boolean upload(byte[] file, String filename, Long fileSize) throws Exception {
+        if (!createFile(filename)){
+            return false;
+        }
+        // 获取双副本系节点信息
+        String dataNodes = allocateDataNodes(filename, fileSize);
+
+        NIOClient.sendFile(file,fileSize);
+
+        return true;
+    }
+
+    /**
+     * 发送创建元数据请求
+     * @param filename
+     * @return
+     */
+    private Boolean createFile(String filename) {
+        CreateFileRequest createFileRequest = CreateFileRequest.newBuilder().setFilename(filename).build();
+        CreateFileResponse createFileResponse = namenode.create(createFileRequest);
+        if (createFileResponse.getStatus() == 1){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 分配双副本对应的数据节点
+     * @param filename
+     * @param filesize
+     * @return
+     */
+    private String allocateDataNodes(String filename, long filesize){
+        AllocateDataNodesRequest request = AllocateDataNodesRequest.newBuilder().setFilename(filename).setFileSize(filesize).build();
+        AllocateDataNodesResponse response = namenode.allocateDataNodes(request);
+        return response.getDatanodes();
     }
 }

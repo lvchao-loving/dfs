@@ -39,7 +39,7 @@ public class NameNodeOfferService {
 	 */
 	private void register() {
 		try {
-			this.serviceActor.register(); 
+			this.serviceActor.register();
 		} catch (Exception e) {
 			e.printStackTrace();  
 		}

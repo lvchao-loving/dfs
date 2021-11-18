@@ -184,4 +184,17 @@ public class FSNamesystem {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 创建文件
+     * @param txid
+     * @param filename 绝对路径和文件名
+     * @return
+     */
+    public Boolean create(Long txid, String filename) {
+        if(!directory.create(txid , filename)) {
+            return false;
+        }
+        return true;
+    }
 }

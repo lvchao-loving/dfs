@@ -74,6 +74,20 @@ public class FSNamesystem {
 	}
 
 	/**
+	 * 创建文件
+	 * @param filename
+	 * @return
+	 * @throws Exception
+	 */
+	public Boolean create(String filename) throws Exception{
+		if(!directory.create(filename)) {
+			return false;
+		}
+		editlog.logEdit(EditLogFactory.create(filename));
+		return true;
+	}
+
+	/**
 	 * 将 checkpointTxid 保存到磁盘中
 	 */
 	public void saveCheckPointTxid(){
