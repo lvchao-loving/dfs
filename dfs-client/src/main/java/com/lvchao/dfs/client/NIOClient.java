@@ -21,13 +21,18 @@ import java.util.Iterator;
  */
 public class NIOClient {
 
-    public static void sendFile(byte[] file, long fileSize){
+    /**
+     * 短链接发送数据
+     * @param file
+     * @param fileSize
+     */
+    public static void sendFile(String hostname, Integer nioPort, byte[] file, Long fileSize){
         try(
             SocketChannel socketChannel = SocketChannel.open();
             Selector selector = Selector.open();
                 ){
             socketChannel.configureBlocking(false);
-            socketChannel.connect(new InetSocketAddress("localhost",9000));
+            socketChannel.connect(new InetSocketAddress(hostname,nioPort));
 
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
@@ -40,12 +45,18 @@ public class NIOClient {
                     SelectionKey key = iterator.next();
                     iterator.remove();
 
+                    // NIO 是否允许进行连接
                     if (key.isConnectable()){
                         SocketChannel channel = (SocketChannel) key.channel();
+                        // NIO 是否正在连接
                         if (channel.isConnectionPending()){
+                            // 等待三次握手的完成
                             channel.finishConnect();
-                            ByteBuffer wrap = ByteBuffer.wrap("hello ,my firend!".getBytes());
-                            channel.write(wrap);
+                            ByteBuffer buffer = ByteBuffer.allocate((int) (fileSize * 2));
+                            buffer.putLong(fileSize);
+                            buffer.put(file);
+                            int write = channel.write(buffer);
+                            ThreadUntils.println("已经发送了" + write + "字节的数据");
                             channel.register(selector,SelectionKey.OP_READ);
                         }
                     }else if (key.isReadable()){
@@ -69,59 +80,4 @@ public class NIOClient {
             e.printStackTrace();
         }
     }
-
-
-    /*public static void sendFile1(byte[] file, long fileSize) {
-        try (
-                SocketChannel channel = SocketChannel.open();
-                Selector selector = Selector.open();
-                ){
-
-            channel.configureBlocking(false);
-            channel.connect(new InetSocketAddress("localhost", 9000));
-
-            channel.register(selector, SelectionKey.OP_CONNECT);
-
-            boolean sending = true;
-
-            while(sending){
-                selector.select();
-
-                Iterator<SelectionKey> keysIterator = selector.selectedKeys().iterator();
-                while(keysIterator.hasNext()){
-                    SelectionKey key = (SelectionKey) keysIterator.next();
-                    keysIterator.remove();
-
-                    if(key.isConnectable()){
-                        channel = (SocketChannel) key.channel();
-
-                        if(channel.isConnectionPending()){
-                            channel.finishConnect();
-
-                            long imageLength = fileSize;
-
-                            ByteBuffer buffer = ByteBuffer.allocate((int)imageLength * 2);
-                            buffer.putLong(imageLength); // long对应了8个字节，放到buffer里去
-                            buffer.put(file);
-
-                            channel.register(selector, SelectionKey.OP_READ);
-                        }
-                    } else if(key.isReadable()){
-                        channel = (SocketChannel) key.channel();
-
-                        ByteBuffer buffer = ByteBuffer.allocate(1024);
-                        int len = channel.read(buffer);
-
-                        if(len > 0) {
-                            System.out.println("[" + Thread.currentThread().getName()
-                                    + "]收到响应：" + new String(buffer.array(), 0, len));
-                            sending = false;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }*/
 }

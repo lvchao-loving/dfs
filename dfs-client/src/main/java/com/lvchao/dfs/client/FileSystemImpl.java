@@ -1,5 +1,7 @@
 package com.lvchao.dfs.client;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.lvchao.dfs.namenode.rpc.model.*;
 import com.lvchao.dfs.namenode.rpc.service.NameNodeServiceGrpc;
 import io.grpc.ManagedChannel;
@@ -50,9 +52,20 @@ public class FileSystemImpl implements FileSystem{
             return false;
         }
         // 获取双副本系节点信息
-        String dataNodes = allocateDataNodes(filename, fileSize);
+        String dataNodeJson = allocateDataNodes(filename, fileSize);
 
-        NIOClient.sendFile(file,fileSize);
+        ThreadUntils.println("NameNode分配的datanode节点为：" + dataNodeJson);
+
+        JSONArray datanodeArray = JSONArray.parseArray(dataNodeJson);
+
+        for (int i = 0; i < datanodeArray.size(); i++) {
+            JSONObject datanode = datanodeArray.getJSONObject(i);
+            String hostname = datanode.getString("hostname");
+            Integer nioPort = datanode.getIntValue("nioPort");
+            NIOClient.sendFile(hostname,nioPort,file,fileSize);
+        }
+
+
 
         return true;
     }
