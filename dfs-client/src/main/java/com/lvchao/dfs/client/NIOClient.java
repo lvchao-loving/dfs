@@ -26,7 +26,7 @@ public class NIOClient {
      * @param file
      * @param fileSize
      */
-    public static void sendFile(String hostname, Integer nioPort, byte[] file, Long fileSize){
+    public static void sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
         try(
             SocketChannel socketChannel = SocketChannel.open();
             Selector selector = Selector.open();
@@ -52,9 +52,7 @@ public class NIOClient {
                         if (channel.isConnectionPending()){
                             // 等待三次握手的完成
                             channel.finishConnect();
-                            ByteBuffer buffer = ByteBuffer.allocate((int) (fileSize * 2));
-                            buffer.putLong(fileSize);
-                            buffer.put(file);
+                            ByteBuffer buffer = loadBufferData(file,filename,fileSize);
                             int write = channel.write(buffer);
                             ThreadUntils.println("已经发送了" + write + "字节的数据");
                             channel.register(selector,SelectionKey.OP_READ);
@@ -79,5 +77,27 @@ public class NIOClient {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 封装发送数据
+     * @param file
+     * @param filename
+     * @param fileSize
+     * @return
+     */
+    private static ByteBuffer loadBufferData(byte[] file, String filename, Long fileSize) {
+        // 计算分配 ByteBuffer 长度
+        byte[] filenameBytes = filename.getBytes();
+        /**
+         * 计算分配bytebuffer的长度 = 4 + filenameBytes.length + 8 + fileSize.intValue() + 8
+         * 计算分配bytebuffer的长度 = 文件名称长度 + 文件名称 + 文件长度 + 文件 + 扩展8字节
+         */
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + filenameBytes.length + 8 + fileSize.intValue() + 8);
+        byteBuffer.putInt(filenameBytes.length);
+        byteBuffer.put(filename.getBytes());
+        byteBuffer.putLong(fileSize);
+        byteBuffer.put(file);
+        return byteBuffer;
     }
 }

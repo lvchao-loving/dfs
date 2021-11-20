@@ -16,4 +16,6 @@ public class DataNodeConfig {
     public static final String DATANODE_HOSTNAME = "dfs-data-01";
     public static final String DATANODE_IP = "127.0.0.1";
     public static final Integer NIO_PORT = 9000;
+
+    public static final String DATA_DIR = "F:\\tmp";
 }
