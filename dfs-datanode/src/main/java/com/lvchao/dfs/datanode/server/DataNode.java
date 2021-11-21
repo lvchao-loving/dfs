@@ -12,24 +12,27 @@ public class DataNode {
 	/**
 	 * 负责跟一组NameNode通信的组件
 	 */
-	private NameNodeOfferService offerService;
+	private NameNodeRpcClient nameNodeRpcClient;
 	
 	/**
 	 * 初始化DataNode
 	 */
-	private void initialize() {
+	private void initialize() throws Exception{
+		// 设置服务器启动标志
 		this.shouldRun = true;
-		this.offerService = new NameNodeOfferService();
-		this.offerService.start();
+
+		// 创建和nameNode网络通信组件，并启动
+		this.nameNodeRpcClient = new NameNodeRpcClient();
+		this.nameNodeRpcClient.start();
 
 		// 创建上传图片线程
-		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer();
+		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(nameNodeRpcClient);
 		dataNodeNIOServer.setName("DataNodeNIOServer");
 		dataNodeNIOServer.start();
 	}
 	
 	/**
-	 * 运行DataNode
+	 * 运行 DataNode TODO
 	 */
 	private void run() {
 		try {
@@ -41,7 +44,7 @@ public class DataNode {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		DataNode datanode = new DataNode();
 		datanode.initialize();
 		datanode.run(); 

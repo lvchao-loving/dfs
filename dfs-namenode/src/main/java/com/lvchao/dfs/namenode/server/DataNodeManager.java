@@ -76,6 +76,16 @@ public class DataNodeManager {
     }
 
     /**
+     * 根据 key 获取 DataNodeInfo
+     * @param ip
+     * @param hostname
+     * @return
+     */
+    public DataNodeInfo getDataNodeInfo(String ip, String hostname){
+        return datanodeInfoMap.get(ip + "-" + hostname);
+    }
+
+    /**
      * datanode是否存活的监控线程
      */
     class DataNodeAliveMonitor extends Thread {

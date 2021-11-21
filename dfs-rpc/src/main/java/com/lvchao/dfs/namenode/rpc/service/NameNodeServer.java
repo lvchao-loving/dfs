@@ -24,8 +24,8 @@ public final class NameNodeServer {
   static {
     java.lang.String[] descriptorData = {
       "\n\027NameNodeRpcServer.proto\022\033com.lvchao.df" +
-      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\245" +
-      "\007\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
+      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\323" +
+      "\t\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
       "hao.dfs.namenode.rpc.RegisterRequest\032-.c" +
       "om.lvchao.dfs.namenode.rpc.RegisterRespo" +
       "nse\022j\n\theartbeat\022-.com.lvchao.dfs.nameno" +
@@ -48,8 +48,16 @@ public final class NameNodeServer {
       "e\022\202\001\n\021allocateDataNodes\0225.com.lvchao.dfs" +
       ".namenode.rpc.AllocateDataNodesRequest\0326" +
       ".com.lvchao.dfs.namenode.rpc.AllocateDat" +
-      "aNodesResponseB7\n#com.lvchao.dfs.namenod" +
-      "e.rpc.serviceB\016NameNodeServerP\001b\006proto3"
+      "aNodesResponse\022\216\001\n\025InformReplicaReceived" +
+      "\0229.com.lvchao.dfs.namenode.rpc.InformRep" +
+      "licaReceivedRequest\032:.com.lvchao.dfs.nam" +
+      "enode.rpc.InformReplicaReceivedResponse\022" +
+      "\232\001\n\031reportCompleteStorageInfo\022=.com.lvch",
+      "ao.dfs.namenode.rpc.ReportCompleteStorag" +
+      "eInfoRequest\032>.com.lvchao.dfs.namenode.r" +
+      "pc.ReportCompleteStorageInfoResponseB7\n#" +
+      "com.lvchao.dfs.namenode.rpc.serviceB\016Nam" +
+      "eNodeServerP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

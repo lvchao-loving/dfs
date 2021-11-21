@@ -28,12 +28,27 @@ public class FSNamesystem {
 	 * 最近一次checkpoint更新到的txid，初始化id
 	 */
 	private Long checkpointTxid = 0L;
-
+	/**
+	 * datandoe 节点组件
+	 */
+	private DataNodeManager dataNodeManager;
+	/**
+	 * checkpointTxid 文件路径
+	 */
 	private String checkpintTxidFilePath = "F:\\editslog\\checkpoint-txid.meta";
-	
-	public FSNamesystem() {
+	/**
+	 * 每个文件对应的副本所在的DataNode节点信息
+	 */
+	private Map<String,List<DataNodeInfo>> replicasByFilename = new HashMap<>();
+
+	/**
+	 * 构造函数，初始化组件
+	 * @param dataNodeManager
+	 */
+	public FSNamesystem(DataNodeManager dataNodeManager) {
 		this.directory = new FSDirectory();
 		this.editlog = new FSEditlog(this);
+		this.dataNodeManager = dataNodeManager;
 		// 加载磁盘 fsimage 文件元数据
 		recoverNamespace();
 	}
@@ -256,7 +271,26 @@ public class FSNamesystem {
 		this.checkpintTxidFilePath = checkpintTxidFilePath;
 	}
 
-	public static void main(String[] args) throws Exception {
-		FSNamesystem fsNamesystem = new FSNamesystem();
+
+	/**
+	 * 给指定的文件增加一个成功接收的文件副本
+	 * @param hostname
+	 * @param ip
+	 * @param filename
+	 * @throws Exception
+	 */
+	public void addReceivedReplica(String hostname, String ip, String filename) throws Exception{
+		synchronized (replicasByFilename){
+			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+
+			if (dataNodeInfoList == null){
+				dataNodeInfoList = new ArrayList<DataNodeInfo>();
+				replicasByFilename.put(filename,dataNodeInfoList);
+			}
+
+			DataNodeInfo dataNodeInfo = dataNodeManager.getDataNodeInfo(ip, hostname);
+
+			dataNodeInfoList.add(dataNodeInfo);
+		}
 	}
 }

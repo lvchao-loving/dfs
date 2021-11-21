@@ -274,6 +274,25 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		responseObserver.onCompleted();
 	}
 
+	@Override
+	public void informReplicaReceived(InformReplicaReceivedRequest request, StreamObserver<InformReplicaReceivedResponse> responseObserver) {
+		try {
+			InformReplicaReceivedResponse response = null;
+			if (!isRunning){
+				response = InformReplicaReceivedResponse.newBuilder().setStatus(STATUS_SHUTDOWN).build();
+			}else {
+				namesystem.addReceivedReplica(request.getHostname(),request.getIp(),request.getFilename());
+				response = InformReplicaReceivedResponse.newBuilder()
+						.setStatus(STATUS_SUCCESS)
+						.build();
+			}
+			responseObserver.onNext(response);
+			responseObserver.onCompleted();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * 从已经刷入磁盘的文件里读取 edislog，同时缓存找个文件数据到内存
 	 * @param syncedTxid

@@ -30,13 +30,18 @@ public class DataNodeNIOServer extends Thread{
     private Map<String,CachedImage> cachedImageMap = new HashMap<>();
 
     /**
+     * 与namenode节点进行同行的组件
+     */
+    private NameNodeRpcClient nameNodeRpcClient;
+    /**
      * DataNodeNIOserver 节点初始化队列和线程的数量
      */
     private static final Integer  QUEUE_THREAD_NUMBER = 3;
 
-    public DataNodeNIOServer(){
+    public DataNodeNIOServer(NameNodeRpcClient nameNodeRpcClient){
         ServerSocketChannel serverSocketChannel = null;
         try{
+            this.nameNodeRpcClient = nameNodeRpcClient;
             // 初始化 ServerSocketChannel
             selector = Selector.open();
 
@@ -136,7 +141,7 @@ public class DataNodeNIOServer extends Thread{
 
                     ByteBuffer buffer = ByteBuffer.allocate(10 * 1024);
                     // 从请求头中解析文件名称
-                    String filename = getFilename(socketChannel, buffer);
+                    Filename filename = getFilename(socketChannel, buffer);
                     ThreadUtils.println("从网络请求中解析出来文件名：" + filename);
                     if (filename == null){
                         socketChannel.close();
@@ -151,7 +156,7 @@ public class DataNodeNIOServer extends Thread{
                     ThreadUtils.println("初始化已经读取的文件大小：" + hasReadImageLength);
 
                     // 构建针对本地文件的输出流
-                    FileOutputStream fileOutputStream = new FileOutputStream(filename);
+                    FileOutputStream fileOutputStream = new FileOutputStream(filename.getAbsoluteFilename());
                     FileChannel fileChannel = fileOutputStream.getChannel();
                     // 根据现有文件的大小设置filechannel的position位置
                     fileChannel.position(fileChannel.size());
@@ -182,6 +187,8 @@ public class DataNodeNIOServer extends Thread{
                         socketChannel.write(outBuffer);
                         cachedImageMap.remove(remoteAddr);
                         ThreadUtils.println("文件读取完毕，返回响应给客户端：" + remoteAddr);
+
+                        nameNodeRpcClient.informReplicaReceived(filename.relativeFilename);
                     }else {
                         // 将未完成完整读取的图片数据添加到缓存中
                         CachedImage cachedImage = new CachedImage(filename, imageLength, hasReadImageLength);
@@ -208,30 +215,37 @@ public class DataNodeNIOServer extends Thread{
          * @param buffer
          * @return
          */
-        private String getFilename(SocketChannel channel, ByteBuffer buffer) throws Exception{
-            String filename = null;
+        private Filename getFilename(SocketChannel channel, ByteBuffer buffer) throws Exception{
+
+            Filename filename = new Filename();
+
             String remoteAdd = channel.getRemoteAddress().toString();
+
             if (cachedImageMap.containsKey(remoteAdd)){
                 filename = cachedImageMap.get(remoteAdd).getFilename();
             }else {
-                filename = getFilenameFromChannel(channel,buffer);
-                if (filename == null){
+                String relativeFilename = getRelativeFilename(channel,buffer);
+                if (relativeFilename == null){
                     return null;
                 }
-                String[] filenameSplited = filename.split("/");
+                // 设置相对路径
+                filename.setRelativeFilename(relativeFilename);
+
+                String[] relativeFilenameSplited = relativeFilename.split("/");
                 String dirPath = dataNodeConfig.DATA_DIR;
-                for (int i = 0; i < filenameSplited.length - 1; i++) {
-                    if (StringUtils.isBlank(filenameSplited[i])){
+                for (int i = 0; i < relativeFilenameSplited.length - 1; i++) {
+                    if (StringUtils.isBlank(relativeFilenameSplited[i])){
                         continue;
                     }
-                    dirPath += "\\" + filenameSplited[i];
+                    dirPath += "\\" + relativeFilenameSplited[i];
                 }
                 // 判断文件路径是否存在不存在则创建
                 File dir = new File(dirPath);
                 if (!dir.exists()){
                     dir.mkdirs();
                 }
-                filename = dirPath + "\\" + filenameSplited[filenameSplited.length -1];
+                String absoluteFilename = dirPath + "\\" + relativeFilenameSplited[relativeFilenameSplited.length -1];
+                filename.setAbsoluteFilename(absoluteFilename);
             }
             return filename;
         }
@@ -270,7 +284,7 @@ public class DataNodeNIOServer extends Thread{
      * @param buffer
      * @return
      */
-    private String getFilenameFromChannel(SocketChannel channel, ByteBuffer buffer) throws Exception{
+    private String getRelativeFilename(SocketChannel channel, ByteBuffer buffer) throws Exception{
         String filename = null;
         int len = channel.read(buffer);
         if (len > 0){
@@ -291,21 +305,70 @@ public class DataNodeNIOServer extends Thread{
         return filename;
     }
 
+    /**
+     * 封装文件名称对象
+     */
+    class Filename{
+        /**
+         * 相对路径
+         */
+        private String relativeFilename;
+        /**
+         * 绝对路径
+         */
+        private String absoluteFilename;
+
+        public Filename() {
+        }
+
+        public Filename(String relativeFilename, String absoluteFilename) {
+            this.relativeFilename = relativeFilename;
+            this.absoluteFilename = absoluteFilename;
+        }
+
+        public String getRelativeFilename() {
+            return relativeFilename;
+        }
+
+        public String getAbsoluteFilename() {
+            return absoluteFilename;
+        }
+
+        public void setRelativeFilename(String relativeFilename) {
+            this.relativeFilename = relativeFilename;
+        }
+
+        public void setAbsoluteFilename(String absoluteFilename) {
+            this.absoluteFilename = absoluteFilename;
+        }
+
+        @Override
+        public String toString() {
+            return "Filename{" +
+                    "relativeFilename='" + relativeFilename + '\'' +
+                    ", absoluteFilename='" + absoluteFilename + '\'' +
+                    '}';
+        }
+    }
+
+    /**
+     * 缓存正在发送的文件
+     */
     class CachedImage{
-        private String filename;
+        private Filename filename;
         private long imageLength;
         private long hasReadImageLength;
 
         public CachedImage() {
         }
 
-        public CachedImage(String filename, long imageLength, long hasReadImageLength) {
+        public CachedImage(Filename filename, long imageLength, long hasReadImageLength) {
             this.filename = filename;
             this.imageLength = imageLength;
             this.hasReadImageLength = hasReadImageLength;
         }
 
-        public String getFilename() {
+        public Filename getFilename() {
             return filename;
         }
 
@@ -317,7 +380,7 @@ public class DataNodeNIOServer extends Thread{
             return hasReadImageLength;
         }
 
-        public void setFilename(String filename) {
+        public void setFilename(Filename filename) {
             this.filename = filename;
         }
 
@@ -332,7 +395,7 @@ public class DataNodeNIOServer extends Thread{
         @Override
         public String toString() {
             return "CachedImage{" +
-                    "filename='" + filename + '\'' +
+                    "filename=" + filename +
                     ", imageLength=" + imageLength +
                     ", hasReadImageLength=" + hasReadImageLength +
                     '}';
