@@ -1,5 +1,8 @@
 package com.lvchao.dfs.datanode.server;
 
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import static com.lvchao.dfs.datanode.server.DataNodeConfig.*;
 
 /**
  * @Title: DataNodeNIOServer
@@ -19,12 +21,14 @@ import static com.lvchao.dfs.datanode.server.DataNodeConfig.*;
  * @version: V1.0
  */
 public class DataNodeNIOServer extends Thread{
+    private DataNodeConfig dataNodeConfig = new DataNodeConfig();
 
     private Selector selector;
 
     private List<LinkedBlockingQueue<SelectionKey>> queues = new ArrayList<>();
 
     private Map<String,CachedImage> cachedImageMap = new HashMap<>();
+
     /**
      * DataNodeNIOserver 节点初始化队列和线程的数量
      */
@@ -35,14 +39,22 @@ public class DataNodeNIOServer extends Thread{
         try{
             // 初始化 ServerSocketChannel
             selector = Selector.open();
+
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false);
-            serverSocketChannel.bind(new InetSocketAddress(NIO_PORT),100);
+            serverSocketChannel.bind(new InetSocketAddress(dataNodeConfig.NIO_PORT),100);
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             // 初始化队列
             for (int i = 0; i < QUEUE_THREAD_NUMBER; i++) {
                 queues.add(new LinkedBlockingQueue<SelectionKey>());
+            }
+
+            // 创建处理队列的线程
+            for (int i = 0; i < QUEUE_THREAD_NUMBER; i++) {
+                Worker worker = new Worker(queues.get(i));
+                worker.setName("Work" + i);
+                worker.start();
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -125,24 +137,28 @@ public class DataNodeNIOServer extends Thread{
                     ByteBuffer buffer = ByteBuffer.allocate(10 * 1024);
                     // 从请求头中解析文件名称
                     String filename = getFilename(socketChannel, buffer);
-
+                    ThreadUtils.println("从网络请求中解析出来文件名：" + filename);
                     if (filename == null){
+                        socketChannel.close();
                         continue;
                     }
 
                     // 从请求中解析文件大小
                     long imageLength = getImageLength(socketChannel,buffer);
-
+                    ThreadUtils.println("从网络请求中解析出来文件长度：" + imageLength);
                     // 定义已经读取的文件大小
                     long hasReadImageLength = getHasReadImageLength(socketChannel);
+                    ThreadUtils.println("初始化已经读取的文件大小：" + hasReadImageLength);
 
+                    // 构建针对本地文件的输出流
                     FileOutputStream fileOutputStream = new FileOutputStream(filename);
                     FileChannel fileChannel = fileOutputStream.getChannel();
-                    // ?
+                    // 根据现有文件的大小设置filechannel的position位置
                     fileChannel.position(fileChannel.size());
 
-                    if (cachedImageMap.containsKey(remoteAddr)){
+                    if (!cachedImageMap.containsKey(remoteAddr)){
                         hasReadImageLength += fileChannel.write(buffer);
+                        ThreadUtils.println("已经向本地磁盘文件写入了" + hasReadImageLength + "字节的数据");
                         buffer.clear();
                     }
                     int len = -1;
@@ -150,6 +166,7 @@ public class DataNodeNIOServer extends Thread{
                     while((len = socketChannel.read(buffer)) > 0){
                         // 将读取的数据加入到已经读取到的长度中
                         hasReadImageLength += len;
+                        ThreadUtils.println("已经向本地磁盘文件写入了" + hasReadImageLength + "字节的数据");
                         // 将 buffer 中的数据写入到缓存中
                         buffer.flip();
                         fileChannel.write(buffer);
@@ -164,11 +181,13 @@ public class DataNodeNIOServer extends Thread{
                         ByteBuffer outBuffer = ByteBuffer.wrap("SUCCESS".getBytes());
                         socketChannel.write(outBuffer);
                         cachedImageMap.remove(remoteAddr);
+                        ThreadUtils.println("文件读取完毕，返回响应给客户端：" + remoteAddr);
                     }else {
                         // 将未完成完整读取的图片数据添加到缓存中
                         CachedImage cachedImage = new CachedImage(filename, imageLength, hasReadImageLength);
                         cachedImageMap.put(remoteAddr,cachedImage);
                         key.interestOps(SelectionKey.OP_READ);
+                        ThreadUtils.println("文件没有读取完毕，等待下一次OP_READ请求，缓存文件：" + cachedImage);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -191,18 +210,18 @@ public class DataNodeNIOServer extends Thread{
          */
         private String getFilename(SocketChannel channel, ByteBuffer buffer) throws Exception{
             String filename = null;
-            String remoteAddress = channel.getRemoteAddress().toString();
-            if (cachedImageMap.containsKey(remoteAddress)){
-                filename = cachedImageMap.get(remoteAddress).getFilename();
+            String remoteAdd = channel.getRemoteAddress().toString();
+            if (cachedImageMap.containsKey(remoteAdd)){
+                filename = cachedImageMap.get(remoteAdd).getFilename();
             }else {
                 filename = getFilenameFromChannel(channel,buffer);
                 if (filename == null){
                     return null;
                 }
                 String[] filenameSplited = filename.split("/");
-                String dirPath = DATA_DIR;
+                String dirPath = dataNodeConfig.DATA_DIR;
                 for (int i = 0; i < filenameSplited.length - 1; i++) {
-                    if ("/".equals(filenameSplited[i])){
+                    if (StringUtils.isBlank(filenameSplited[i])){
                         continue;
                     }
                     dirPath += "\\" + filenameSplited[i];
@@ -222,7 +241,7 @@ public class DataNodeNIOServer extends Thread{
         long hasReadImageLength = 0L;
         String remoteAddr = channel.getRemoteAddress().toString();
         if (cachedImageMap.containsKey(remoteAddr)){
-            hasReadImageLength = cachedImageMap.get(remoteAddr).getImageLength();
+            hasReadImageLength = cachedImageMap.get(remoteAddr).getHasReadImageLength();
         }
         return hasReadImageLength;
     }
@@ -242,7 +261,7 @@ public class DataNodeNIOServer extends Thread{
             imageLength = imageLengthBuffer.getLong();
         }
 
-        return 0;
+        return imageLength;
     }
 
     /**
@@ -255,6 +274,8 @@ public class DataNodeNIOServer extends Thread{
         String filename = null;
         int len = channel.read(buffer);
         if (len > 0){
+            buffer.flip();
+
             byte[] filenameLengthBytes = new byte[4];
             buffer.get(filenameLengthBytes,0,4);
 
@@ -264,7 +285,7 @@ public class DataNodeNIOServer extends Thread{
             int filenameLength = filenameLengthBuffer.getInt();
 
             byte[] filenameBytes = new byte[filenameLength];
-            buffer.get(filenameBytes,4,filenameLength);
+            buffer.get(filenameBytes,0,filenameLength);
             filename = new String(filenameBytes);
         }
         return filename;

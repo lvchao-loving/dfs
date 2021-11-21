@@ -35,7 +35,7 @@ public class FileSystemImpl implements FileSystem{
         MkdirRequest mkdirRequest = MkdirRequest.newBuilder().setPath(path).build();
         MkdirResponse mkdirResponse = namenode.mkdir(mkdirRequest);
 
-        ThreadUntils.println("创建目录的响应：" + mkdirResponse.getStatus());
+        ThreadUtils.println("创建目录的响应：" + mkdirResponse.getStatus());
     }
 
     @Override
@@ -43,7 +43,7 @@ public class FileSystemImpl implements FileSystem{
         ShutdownRequest shutdownRequest = ShutdownRequest.newBuilder().setCode(1).build();
         ShutdownResponse shutdownResponse = namenode.shutdown(shutdownRequest);
 
-        ThreadUntils.println("关闭请求的响应：" + shutdownResponse.getStatus());
+        ThreadUtils.println("关闭请求的响应：" + shutdownResponse.getStatus());
     }
 
     @Override
@@ -54,7 +54,7 @@ public class FileSystemImpl implements FileSystem{
         // 获取双副本系节点信息
         String dataNodeJson = allocateDataNodes(filename, fileSize);
 
-        ThreadUntils.println("NameNode分配的datanode节点为：" + dataNodeJson);
+        ThreadUtils.println("NameNode分配的datanode节点为：" + dataNodeJson);
 
         JSONArray datanodeArray = JSONArray.parseArray(dataNodeJson);
 
@@ -64,8 +64,6 @@ public class FileSystemImpl implements FileSystem{
             Integer nioPort = datanode.getIntValue("nioPort");
             NIOClient.sendFile(hostname, nioPort, file, filename, fileSize);
         }
-
-
 
         return true;
     }

@@ -10,12 +10,13 @@ package com.lvchao.dfs.datanode.server;
  */
 public class DataNodeConfig {
 
-    public static final String NAMENODE_HOSTNAME = "localhost";
-    public static final Integer NAMENODE_PORT = 50070;
+    public String NAMENODE_HOSTNAME = "localhost";
+    public Integer NAMENODE_PORT = 50070;
 
-    public static final String DATANODE_HOSTNAME = "dfs-data-01";
-    public static final String DATANODE_IP = "127.0.0.1";
-    public static final Integer NIO_PORT = 9000;
+    public String DATANODE_HOSTNAME = "localhost";
+    public String DATANODE_IP = "127.0.0.2";
+    public Integer NIO_PORT = 9302;
 
-    public static final String DATA_DIR = "F:\\tmp";
+    public String DATA_DIR = "F:\\tmp2";
+
 }

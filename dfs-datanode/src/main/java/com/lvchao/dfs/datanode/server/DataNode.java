@@ -24,6 +24,7 @@ public class DataNode {
 
 		// 创建上传图片线程
 		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer();
+		dataNodeNIOServer.setName("DataNodeNIOServer");
 		dataNodeNIOServer.start();
 	}
 	
@@ -45,5 +46,4 @@ public class DataNode {
 		datanode.initialize();
 		datanode.run(); 
 	}
-	
 }

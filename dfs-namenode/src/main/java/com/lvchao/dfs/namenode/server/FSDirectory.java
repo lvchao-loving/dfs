@@ -158,7 +158,8 @@ public class FSDirectory {
             INode parent = dirTree;
 
             for (int i = 0; i < splitedFilename.length - 1; i++) {
-                if (i == 0) {
+                // 略过以 / 开始的文件名称
+                if ("/".equals(splitedFilename[i])) {
                     continue;
                 }
 

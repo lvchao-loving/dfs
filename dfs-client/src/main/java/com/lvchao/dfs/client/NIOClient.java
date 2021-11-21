@@ -1,7 +1,5 @@
 package com.lvchao.dfs.client;
 
-import org.apache.commons.lang3.ThreadUtils;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -20,8 +18,7 @@ import java.util.Iterator;
  * @version: V1.0
  */
 public class NIOClient {
-
-    /**
+   /**
      * 短链接发送数据
      * @param file
      * @param fileSize
@@ -54,7 +51,7 @@ public class NIOClient {
                             channel.finishConnect();
                             ByteBuffer buffer = loadBufferData(file,filename,fileSize);
                             int write = channel.write(buffer);
-                            ThreadUntils.println("已经发送了" + write + "字节的数据");
+                            ThreadUtils.println("已经发送了" + write + "字节的数据");
                             channel.register(selector,SelectionKey.OP_READ);
                         }
                     }else if (key.isReadable()){
@@ -68,7 +65,7 @@ public class NIOClient {
                             buffer.clear();
                         }
                         String channelContent = fileContentSB.toString();
-                        ThreadUntils.println("接收到的服务消息为：" + channelContent);
+                        ThreadUtils.println("接收到的服务消息为：" + channelContent);
                         sending = false;
                     }
                 }
@@ -98,6 +95,7 @@ public class NIOClient {
         byteBuffer.put(filename.getBytes());
         byteBuffer.putLong(fileSize);
         byteBuffer.put(file);
+        byteBuffer.flip();
         return byteBuffer;
     }
 }

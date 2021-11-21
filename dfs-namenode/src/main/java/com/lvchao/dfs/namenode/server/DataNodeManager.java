@@ -90,7 +90,7 @@ public class DataNodeManager {
                     DataNodeInfo datanode = null;
                     while(datanodesIterator.hasNext()) {
                         datanode = datanodesIterator.next();
-                        if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 90 * 1000) {
+                        if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 9000 * 1000) {
                             toRemoveDatanodes.add(datanode.getIp() + "-" + datanode.getHostname());
                         }
                     }
@@ -103,7 +103,7 @@ public class DataNodeManager {
                         }
                     }
 
-                    Thread.sleep(30 * 1000);
+                    Thread.sleep(3000 * 1000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
