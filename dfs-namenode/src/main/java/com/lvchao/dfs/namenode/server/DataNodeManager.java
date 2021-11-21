@@ -86,6 +86,19 @@ public class DataNodeManager {
     }
 
     /**
+     * 设置一个 DataNodeInfo 的存储数据的大小
+     * @param ip
+     * @param hostname
+     * @param storedDataSize
+     */
+    public void setStoredDataSize(String ip, String hostname, Long storedDataSize){
+        // 从 DataNodeInfoMap 中获取 DataNodeInfo
+        DataNodeInfo dataNodeInfo = datanodeInfoMap.get(ip + "-" + hostname);
+        // 设置 DataNodeInfo 的 stordDataSize
+        dataNodeInfo.setStoredDataSize(storedDataSize);
+    }
+
+    /**
      * datanode是否存活的监控线程
      */
     class DataNodeAliveMonitor extends Thread {

@@ -293,6 +293,33 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		}
 	}
 
+	@Override
+	public void reportCompleteStorageInfo(ReportCompleteStorageInfoRequest request, StreamObserver<ReportCompleteStorageInfoResponse> responseObserver) {
+		try {
+			ReportCompleteStorageInfoResponse response = null;
+			if (!isRunning){
+				response = ReportCompleteStorageInfoResponse.newBuilder().setStatus(STATUS_SHUTDOWN).build();
+			}else {
+				// 将发送过来 storedDataSize 设置到 DataNodeManager 组件中
+				datanodeManager.setStoredDataSize(request.getIp(),request.getHostname(),request.getStoredDataSize());
+
+				JSONArray filenames = JSONArray.parseArray(request.getFilenames());
+
+				for (int i = 0; i < filenames.size(); i++) {
+					namesystem.addReceivedReplica(request.getHostname(),request.getIp(),filenames.getString(i));
+				}
+
+				response = ReportCompleteStorageInfoResponse.newBuilder()
+						.setStatus(STATUS_SUCCESS)
+						.build();
+			}
+			responseObserver.onNext(response);
+			responseObserver.onCompleted();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * 从已经刷入磁盘的文件里读取 edislog，同时缓存找个文件数据到内存
 	 * @param syncedTxid

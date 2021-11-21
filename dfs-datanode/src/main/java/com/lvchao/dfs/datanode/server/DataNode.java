@@ -17,7 +17,7 @@ public class DataNode {
 	/**
 	 * 初始化DataNode
 	 */
-	private void initialize() throws Exception{
+	public DataNode() throws Exception{
 		// 设置服务器启动标志
 		this.shouldRun = true;
 
@@ -34,7 +34,7 @@ public class DataNode {
 	/**
 	 * 运行 DataNode TODO
 	 */
-	private void run() {
+	private void start() {
 		try {
 			while(shouldRun) {
 				Thread.sleep(1000);  
@@ -46,7 +46,6 @@ public class DataNode {
 	
 	public static void main(String[] args) throws Exception{
 		DataNode datanode = new DataNode();
-		datanode.initialize();
-		datanode.run(); 
+		datanode.start();
 	}
 }
