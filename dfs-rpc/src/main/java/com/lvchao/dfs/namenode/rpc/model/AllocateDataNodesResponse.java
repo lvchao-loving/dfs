@@ -4,19 +4,18 @@
 package com.lvchao.dfs.namenode.rpc.model;
 
 /**
- * Protobuf type {@code com.lvchao.dfs.namenode.rpc.HeartbeatResponse}
+ * Protobuf type {@code com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse}
  */
-public  final class HeartbeatResponse extends
+public  final class AllocateDataNodesResponse extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:com.lvchao.dfs.namenode.rpc.HeartbeatResponse)
-    HeartbeatResponseOrBuilder {
-  // Use HeartbeatResponse.newBuilder() to construct.
-  private HeartbeatResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // @@protoc_insertion_point(message_implements:com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse)
+    AllocateDataNodesResponseOrBuilder {
+  // Use AllocateDataNodesResponse.newBuilder() to construct.
+  private AllocateDataNodesResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private HeartbeatResponse() {
-    status_ = 0;
-    commands_ = "";
+  private AllocateDataNodesResponse() {
+    datanodes_ = "";
   }
 
   @java.lang.Override
@@ -24,7 +23,7 @@ public  final class HeartbeatResponse extends
   getUnknownFields() {
     return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
   }
-  private HeartbeatResponse(
+  private AllocateDataNodesResponse(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -44,15 +43,10 @@ public  final class HeartbeatResponse extends
             }
             break;
           }
-          case 8: {
-
-            status_ = input.readInt32();
-            break;
-          }
-          case 18: {
+          case 10: {
             java.lang.String s = input.readStringRequireUtf8();
 
-            commands_ = s;
+            datanodes_ = s;
             break;
           }
         }
@@ -68,53 +62,44 @@ public  final class HeartbeatResponse extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_descriptor;
+    return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_fieldAccessorTable
+    return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.class, com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.Builder.class);
+            com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.class, com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.Builder.class);
   }
 
-  public static final int STATUS_FIELD_NUMBER = 1;
-  private int status_;
+  public static final int DATANODES_FIELD_NUMBER = 1;
+  private volatile java.lang.Object datanodes_;
   /**
-   * <code>optional int32 status = 1;</code>
+   * <code>optional string datanodes = 1;</code>
    */
-  public int getStatus() {
-    return status_;
-  }
-
-  public static final int COMMANDS_FIELD_NUMBER = 2;
-  private volatile java.lang.Object commands_;
-  /**
-   * <code>optional string commands = 2;</code>
-   */
-  public java.lang.String getCommands() {
-    java.lang.Object ref = commands_;
+  public java.lang.String getDatanodes() {
+    java.lang.Object ref = datanodes_;
     if (ref instanceof java.lang.String) {
       return (java.lang.String) ref;
     } else {
       com.google.protobuf.ByteString bs = 
           (com.google.protobuf.ByteString) ref;
       java.lang.String s = bs.toStringUtf8();
-      commands_ = s;
+      datanodes_ = s;
       return s;
     }
   }
   /**
-   * <code>optional string commands = 2;</code>
+   * <code>optional string datanodes = 1;</code>
    */
   public com.google.protobuf.ByteString
-      getCommandsBytes() {
-    java.lang.Object ref = commands_;
+      getDatanodesBytes() {
+    java.lang.Object ref = datanodes_;
     if (ref instanceof java.lang.String) {
       com.google.protobuf.ByteString b = 
           com.google.protobuf.ByteString.copyFromUtf8(
               (java.lang.String) ref);
-      commands_ = b;
+      datanodes_ = b;
       return b;
     } else {
       return (com.google.protobuf.ByteString) ref;
@@ -133,11 +118,8 @@ public  final class HeartbeatResponse extends
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (status_ != 0) {
-      output.writeInt32(1, status_);
-    }
-    if (!getCommandsBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, commands_);
+    if (!getDatanodesBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, datanodes_);
     }
   }
 
@@ -146,12 +128,8 @@ public  final class HeartbeatResponse extends
     if (size != -1) return size;
 
     size = 0;
-    if (status_ != 0) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeInt32Size(1, status_);
-    }
-    if (!getCommandsBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, commands_);
+    if (!getDatanodesBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, datanodes_);
     }
     memoizedSize = size;
     return size;
@@ -163,16 +141,14 @@ public  final class HeartbeatResponse extends
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse)) {
+    if (!(obj instanceof com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse)) {
       return super.equals(obj);
     }
-    com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse other = (com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse) obj;
+    com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse other = (com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse) obj;
 
     boolean result = true;
-    result = result && (getStatus()
-        == other.getStatus());
-    result = result && getCommands()
-        .equals(other.getCommands());
+    result = result && getDatanodes()
+        .equals(other.getDatanodes());
     return result;
   }
 
@@ -183,67 +159,65 @@ public  final class HeartbeatResponse extends
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptorForType().hashCode();
-    hash = (37 * hash) + STATUS_FIELD_NUMBER;
-    hash = (53 * hash) + getStatus();
-    hash = (37 * hash) + COMMANDS_FIELD_NUMBER;
-    hash = (53 * hash) + getCommands().hashCode();
+    hash = (37 * hash) + DATANODES_FIELD_NUMBER;
+    hash = (53 * hash) + getDatanodes().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(byte[] data)
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(java.io.InputStream input)
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseDelimitedFrom(java.io.InputStream input)
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseDelimitedFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parseFrom(
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -255,7 +229,7 @@ public  final class HeartbeatResponse extends
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse prototype) {
+  public static Builder newBuilder(com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   public Builder toBuilder() {
@@ -270,25 +244,25 @@ public  final class HeartbeatResponse extends
     return builder;
   }
   /**
-   * Protobuf type {@code com.lvchao.dfs.namenode.rpc.HeartbeatResponse}
+   * Protobuf type {@code com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:com.lvchao.dfs.namenode.rpc.HeartbeatResponse)
-      com.lvchao.dfs.namenode.rpc.model.HeartbeatResponseOrBuilder {
+      // @@protoc_insertion_point(builder_implements:com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse)
+      com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponseOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_descriptor;
+      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_fieldAccessorTable
+      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.class, com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.Builder.class);
+              com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.class, com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.Builder.class);
     }
 
-    // Construct using com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.newBuilder()
+    // Construct using com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -305,34 +279,31 @@ public  final class HeartbeatResponse extends
     }
     public Builder clear() {
       super.clear();
-      status_ = 0;
-
-      commands_ = "";
+      datanodes_ = "";
 
       return this;
     }
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_descriptor;
+      return com.lvchao.dfs.namenode.rpc.model.NameNodeRpcModel.internal_static_com_lvchao_dfs_namenode_rpc_AllocateDataNodesResponse_descriptor;
     }
 
-    public com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse getDefaultInstanceForType() {
-      return com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.getDefaultInstance();
+    public com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse getDefaultInstanceForType() {
+      return com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.getDefaultInstance();
     }
 
-    public com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse build() {
-      com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse result = buildPartial();
+    public com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse build() {
+      com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
       return result;
     }
 
-    public com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse buildPartial() {
-      com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse result = new com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse(this);
-      result.status_ = status_;
-      result.commands_ = commands_;
+    public com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse buildPartial() {
+      com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse result = new com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse(this);
+      result.datanodes_ = datanodes_;
       onBuilt();
       return result;
     }
@@ -364,21 +335,18 @@ public  final class HeartbeatResponse extends
       return (Builder) super.addRepeatedField(field, value);
     }
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse) {
-        return mergeFrom((com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse)other);
+      if (other instanceof com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse) {
+        return mergeFrom((com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse other) {
-      if (other == com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse.getDefaultInstance()) return this;
-      if (other.getStatus() != 0) {
-        setStatus(other.getStatus());
-      }
-      if (!other.getCommands().isEmpty()) {
-        commands_ = other.commands_;
+    public Builder mergeFrom(com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse other) {
+      if (other == com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse.getDefaultInstance()) return this;
+      if (!other.getDatanodes().isEmpty()) {
+        datanodes_ = other.datanodes_;
         onChanged();
       }
       onChanged();
@@ -393,11 +361,11 @@ public  final class HeartbeatResponse extends
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse parsedMessage = null;
+      com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse) e.getUnfinishedMessage();
+        parsedMessage = (com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -407,97 +375,71 @@ public  final class HeartbeatResponse extends
       return this;
     }
 
-    private int status_ ;
+    private java.lang.Object datanodes_ = "";
     /**
-     * <code>optional int32 status = 1;</code>
+     * <code>optional string datanodes = 1;</code>
      */
-    public int getStatus() {
-      return status_;
-    }
-    /**
-     * <code>optional int32 status = 1;</code>
-     */
-    public Builder setStatus(int value) {
-      
-      status_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>optional int32 status = 1;</code>
-     */
-    public Builder clearStatus() {
-      
-      status_ = 0;
-      onChanged();
-      return this;
-    }
-
-    private java.lang.Object commands_ = "";
-    /**
-     * <code>optional string commands = 2;</code>
-     */
-    public java.lang.String getCommands() {
-      java.lang.Object ref = commands_;
+    public java.lang.String getDatanodes() {
+      java.lang.Object ref = datanodes_;
       if (!(ref instanceof java.lang.String)) {
         com.google.protobuf.ByteString bs =
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        commands_ = s;
+        datanodes_ = s;
         return s;
       } else {
         return (java.lang.String) ref;
       }
     }
     /**
-     * <code>optional string commands = 2;</code>
+     * <code>optional string datanodes = 1;</code>
      */
     public com.google.protobuf.ByteString
-        getCommandsBytes() {
-      java.lang.Object ref = commands_;
+        getDatanodesBytes() {
+      java.lang.Object ref = datanodes_;
       if (ref instanceof String) {
         com.google.protobuf.ByteString b = 
             com.google.protobuf.ByteString.copyFromUtf8(
                 (java.lang.String) ref);
-        commands_ = b;
+        datanodes_ = b;
         return b;
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
     }
     /**
-     * <code>optional string commands = 2;</code>
+     * <code>optional string datanodes = 1;</code>
      */
-    public Builder setCommands(
+    public Builder setDatanodes(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
   
-      commands_ = value;
+      datanodes_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional string commands = 2;</code>
+     * <code>optional string datanodes = 1;</code>
      */
-    public Builder clearCommands() {
+    public Builder clearDatanodes() {
       
-      commands_ = getDefaultInstance().getCommands();
+      datanodes_ = getDefaultInstance().getDatanodes();
       onChanged();
       return this;
     }
     /**
-     * <code>optional string commands = 2;</code>
+     * <code>optional string datanodes = 1;</code>
      */
-    public Builder setCommandsBytes(
+    public Builder setDatanodesBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
       
-      commands_ = value;
+      datanodes_ = value;
       onChanged();
       return this;
     }
@@ -512,39 +454,39 @@ public  final class HeartbeatResponse extends
     }
 
 
-    // @@protoc_insertion_point(builder_scope:com.lvchao.dfs.namenode.rpc.HeartbeatResponse)
+    // @@protoc_insertion_point(builder_scope:com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse)
   }
 
-  // @@protoc_insertion_point(class_scope:com.lvchao.dfs.namenode.rpc.HeartbeatResponse)
-  private static final com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:com.lvchao.dfs.namenode.rpc.AllocateDataNodesResponse)
+  private static final com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse();
+    DEFAULT_INSTANCE = new com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse();
   }
 
-  public static com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse getDefaultInstance() {
+  public static com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<HeartbeatResponse>
-      PARSER = new com.google.protobuf.AbstractParser<HeartbeatResponse>() {
-    public HeartbeatResponse parsePartialFrom(
+  private static final com.google.protobuf.Parser<AllocateDataNodesResponse>
+      PARSER = new com.google.protobuf.AbstractParser<AllocateDataNodesResponse>() {
+    public AllocateDataNodesResponse parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-        return new HeartbeatResponse(input, extensionRegistry);
+        return new AllocateDataNodesResponse(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<HeartbeatResponse> parser() {
+  public static com.google.protobuf.Parser<AllocateDataNodesResponse> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<HeartbeatResponse> getParserForType() {
+  public com.google.protobuf.Parser<AllocateDataNodesResponse> getParserForType() {
     return PARSER;
   }
 
-  public com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse getDefaultInstanceForType() {
+  public com.lvchao.dfs.namenode.rpc.model.AllocateDataNodesResponse getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

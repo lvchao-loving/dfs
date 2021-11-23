@@ -29,7 +29,7 @@ public class NameNodeRpcClient {
 	/**
 	 * 向自己负责通信的那个NameNode进行注册
 	 */
-	public void register() throws Exception {
+	public Boolean register() throws Exception {
 		ThreadUtils.println("发送RPC请求到NameNode进行注册.......");
 
 		RegisterRequest request = RegisterRequest.newBuilder()
@@ -39,7 +39,10 @@ public class NameNodeRpcClient {
 				.build();
 		RegisterResponse response = namenode.register(request);
 
-		ThreadUtils.println("接收到NameNode返回的注册响应：" + response.getStatus());
+		if (response.getStatus() == 1){
+			return true;
+		}
+		return false;
 	}
 	
 	/**

@@ -6,14 +6,17 @@ import java.io.File;
  * DataNode启动类
  */
 public class DataNode {
+
 	/**
 	 * 初始化文件配置
 	 */
 	private DataNodeConfig dataNodeConfig = new DataNodeConfig();
+
 	/**
 	 * 是否还在运行
 	 */
 	private volatile Boolean shouldRun;
+
 	/**
 	 * 负责跟一组NameNode通信的组件
 	 */
@@ -30,20 +33,24 @@ public class DataNode {
 		this.nameNodeRpcClient = new NameNodeRpcClient();
 
 		// 发送注册请求
-		this.nameNodeRpcClient.register();
+		Boolean registerFlag = this.nameNodeRpcClient.register();
+		if (registerFlag){
+			// 启动发送心跳请求（定时发送心跳）
+			this.nameNodeRpcClient.startHeartbeat();
 
-		// 启动发送心跳请求（定时发送心跳）
-		this.nameNodeRpcClient.startHeartbeat();
+			StorageInfo storageInfo = getDataNodeStoredInfo();
 
-		StorageInfo storageInfo = getDataNodeStoredInfo();
+			// 向NameNode发送数据
+			this.nameNodeRpcClient.reportCompleteStorageInfo(storageInfo);
 
-		// 向NameNode发送数据
-		this.nameNodeRpcClient.reportCompleteStorageInfo(storageInfo);
-
-		// 创建上传图片线程
-		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(this.nameNodeRpcClient);
-		dataNodeNIOServer.setName("DataNodeNIOServer");
-		dataNodeNIOServer.start();
+			// 创建上传图片线程
+			DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(this.nameNodeRpcClient);
+			dataNodeNIOServer.setName("DataNodeNIOServer");
+			dataNodeNIOServer.start();
+		}else {
+			System.out.println("向NameNode注册失败，直接退出......");
+			System.exit(1);
+		}
 	}
 
 	/**

@@ -128,29 +128,30 @@ public final class NameNodeRpcModel {
       " \001(\t\022\020\n\010hostname\030\002 \001(\t\022\017\n\007nioPort\030\003 \001(\005\"" +
       "\"\n\020RegisterResponse\022\016\n\006status\030\001 \001(\005\"A\n\020H" +
       "eartbeatRequest\022\n\n\002ip\030\001 \001(\t\022\020\n\010hostname\030" +
-      "\002 \001(\t\022\017\n\007nioPort\030\003 \001(\005\"#\n\021HeartbeatRespo" +
-      "nse\022\016\n\006status\030\001 \001(\005\"\034\n\014MkdirRequest\022\014\n\004p" +
-      "ath\030\001 \001(\t\"\037\n\rMkdirResponse\022\016\n\006status\030\001 \001" +
-      "(\005\"\037\n\017ShutdownRequest\022\014\n\004code\030\001 \001(\005\"\"\n\020S" +
-      "hutdownResponse\022\016\n\006status\030\001 \001(\005\"*\n\024Fetch",
-      "EditsLogRequest\022\022\n\nsyncedTxid\030\001 \001(\003\")\n\025F" +
-      "etchEditsLogResponse\022\020\n\010editsLog\030\001 \001(\t\"+" +
-      "\n\033UpdateCheckpointTxidRequest\022\014\n\004txid\030\001 " +
-      "\001(\003\".\n\034UpdateCheckpointTxidResponse\022\016\n\006s" +
-      "tatus\030\001 \001(\005\"%\n\021CreateFileRequest\022\020\n\010file" +
-      "name\030\001 \001(\t\"$\n\022CreateFileResponse\022\016\n\006stat" +
-      "us\030\001 \001(\005\">\n\030AllocateDataNodesRequest\022\020\n\010" +
-      "filename\030\001 \001(\t\022\020\n\010fileSize\030\002 \001(\003\".\n\031Allo" +
-      "cateDataNodesResponse\022\021\n\tdatanodes\030\001 \001(\t" +
-      "\"N\n\034InformReplicaReceivedRequest\022\n\n\002ip\030\001",
-      " \001(\t\022\020\n\010hostname\030\002 \001(\t\022\020\n\010filename\030\003 \001(\t" +
-      "\"/\n\035InformReplicaReceivedResponse\022\016\n\006sta" +
-      "tus\030\001 \001(\005\"k\n ReportCompleteStorageInfoRe" +
-      "quest\022\n\n\002ip\030\001 \001(\t\022\020\n\010hostname\030\002 \001(\t\022\021\n\tf" +
-      "ilenames\030\003 \001(\t\022\026\n\016storedDataSize\030\004 \001(\003\"3" +
-      "\n!ReportCompleteStorageInfoResponse\022\016\n\006s" +
-      "tatus\030\001 \001(\005B7\n!com.lvchao.dfs.namenode.r" +
-      "pc.modelB\020NameNodeRpcModelP\001b\006proto3"
+      "\002 \001(\t\022\017\n\007nioPort\030\003 \001(\005\"5\n\021HeartbeatRespo" +
+      "nse\022\016\n\006status\030\001 \001(\005\022\020\n\010commands\030\002 \001(\t\"\034\n" +
+      "\014MkdirRequest\022\014\n\004path\030\001 \001(\t\"\037\n\rMkdirResp" +
+      "onse\022\016\n\006status\030\001 \001(\005\"\037\n\017ShutdownRequest\022" +
+      "\014\n\004code\030\001 \001(\005\"\"\n\020ShutdownResponse\022\016\n\006sta",
+      "tus\030\001 \001(\005\"*\n\024FetchEditsLogRequest\022\022\n\nsyn" +
+      "cedTxid\030\001 \001(\003\")\n\025FetchEditsLogResponse\022\020" +
+      "\n\010editsLog\030\001 \001(\t\"+\n\033UpdateCheckpointTxid" +
+      "Request\022\014\n\004txid\030\001 \001(\003\".\n\034UpdateCheckpoin" +
+      "tTxidResponse\022\016\n\006status\030\001 \001(\005\"%\n\021CreateF" +
+      "ileRequest\022\020\n\010filename\030\001 \001(\t\"$\n\022CreateFi" +
+      "leResponse\022\016\n\006status\030\001 \001(\005\">\n\030AllocateDa" +
+      "taNodesRequest\022\020\n\010filename\030\001 \001(\t\022\020\n\010file" +
+      "Size\030\002 \001(\003\".\n\031AllocateDataNodesResponse\022" +
+      "\021\n\tdatanodes\030\001 \001(\t\"N\n\034InformReplicaRecei",
+      "vedRequest\022\n\n\002ip\030\001 \001(\t\022\020\n\010hostname\030\002 \001(\t" +
+      "\022\020\n\010filename\030\003 \001(\t\"/\n\035InformReplicaRecei" +
+      "vedResponse\022\016\n\006status\030\001 \001(\005\"k\n ReportCom" +
+      "pleteStorageInfoRequest\022\n\n\002ip\030\001 \001(\t\022\020\n\010h" +
+      "ostname\030\002 \001(\t\022\021\n\tfilenames\030\003 \001(\t\022\026\n\016stor" +
+      "edDataSize\030\004 \001(\003\"3\n!ReportCompleteStorag" +
+      "eInfoResponse\022\016\n\006status\030\001 \001(\005B7\n!com.lvc" +
+      "hao.dfs.namenode.rpc.modelB\020NameNodeRpcM" +
+      "odelP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -187,7 +188,7 @@ public final class NameNodeRpcModel {
     internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_com_lvchao_dfs_namenode_rpc_HeartbeatResponse_descriptor,
-        new java.lang.String[] { "Status", });
+        new java.lang.String[] { "Status", "Commands", });
     internal_static_com_lvchao_dfs_namenode_rpc_MkdirRequest_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_com_lvchao_dfs_namenode_rpc_MkdirRequest_fieldAccessorTable = new
