@@ -27,23 +27,19 @@ public class NameNodeRpcClient {
 	}
 
 	/**
-	 * 【启动注册线程】 和 【启动心跳线程】
-	 * @throws Exception
-	 */
-	public void start() throws Exception{
-		register();
-		startHeartbeat();
-	}
-
-	/**
 	 * 向自己负责通信的那个NameNode进行注册
 	 */
 	public void register() throws Exception {
-		RegisterThread registerThread = new RegisterThread();
-		registerThread.setName("RegisterThread");
-		registerThread.start();
-		// join方法将会在先执行调用join方法的线程后执行其它线程，使线程串行化
-		registerThread.join();
+		ThreadUtils.println("发送RPC请求到NameNode进行注册.......");
+
+		RegisterRequest request = RegisterRequest.newBuilder()
+				.setIp(dataNodeConfig.DATANODE_IP)
+				.setHostname(dataNodeConfig.DATANODE_HOSTNAME)
+				.setNioPort(dataNodeConfig.NIO_PORT)
+				.build();
+		RegisterResponse response = namenode.register(request);
+
+		ThreadUtils.println("接收到NameNode返回的注册响应：" + response.getStatus());
 	}
 	
 	/**
@@ -64,7 +60,17 @@ public class NameNodeRpcClient {
 				.setFilename(filename).setIp(dataNodeConfig.DATANODE_IP).setHostname(dataNodeConfig.DATANODE_HOSTNAME).build();
 		namenode.informReplicaReceived(request);
 	}
-	
+
+	/**
+	 * 上报master
+	 * @param storageInfo
+	 */
+	public void reportCompleteStorageInfo(StorageInfo storageInfo) {
+		System.out.println(storageInfo.getFilenames());
+		System.out.println("-----------");
+		System.out.println(storageInfo.getStoredDataSize());
+	}
+
 	/**
 	 * 负责注册的线程
 	 */
@@ -96,18 +102,17 @@ public class NameNodeRpcClient {
 		@Override
 		public void run() {
 			try {
+				ThreadUtils.println("定时心跳线程启动.......");
 				while(true) {
-					ThreadUtils.println("每隔30秒--发送RPC请求到NameNode进行心跳.......");
-					
 					HeartbeatRequest request = HeartbeatRequest.newBuilder()
 							.setIp(dataNodeConfig.DATANODE_IP)
 							.setHostname(dataNodeConfig.DATANODE_HOSTNAME)
 							.setNioPort(dataNodeConfig.NIO_PORT)
 							.build();
 					HeartbeatResponse response = namenode.heartbeat(request);
-					ThreadUtils.println("接收到NameNode返回的心跳响应：" + response.getStatus());
-					
-					Thread.sleep(30 * 1000); // 每隔30秒发送一次心跳到NameNode上去
+					ThreadUtils.println("发送后接收到NameNode返回的心跳响应：" + response.getStatus());
+					// 每隔30秒发送一次心跳到NameNode上去
+					Thread.sleep(30 * 1000);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
