@@ -115,7 +115,7 @@ public class DoubleBuffer {
             this.endTxid = log.getTxid();
             buffer.write(log.getContent().getBytes());
             buffer.write("\n".getBytes());
-            ThreadUntils.println("写入一条editslog：" + log.getContent() + "，当前系统缓冲区的大小是：" + size());
+            ThreadUtils.println("写入一条editslog：" + log.getContent() + "，当前系统缓冲区的大小是：" + size());
         }
 
         /**
@@ -138,7 +138,7 @@ public class DoubleBuffer {
             ByteBuffer dataBuffer = ByteBuffer.wrap(data);
 
             if (startTxid.longValue() == endTxid.longValue()){
-                ThreadUntils.println("无数据，不需要持久化磁盘");
+                ThreadUtils.println("无数据，不需要持久化磁盘");
                 return;
             }
             // 拼接文件路径

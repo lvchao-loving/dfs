@@ -67,7 +67,7 @@ public class FSDirectory {
             return;
         }
         for (INode dir : dirTree.getChildren()) {
-            ThreadUntils.println(blank + ((INode) dir).getPath());
+            ThreadUtils.println(blank + ((INode) dir).getPath());
             printDirTree((INode) dir, blank + " ");
         }
     }

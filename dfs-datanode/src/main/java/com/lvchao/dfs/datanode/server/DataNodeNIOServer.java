@@ -189,6 +189,8 @@ public class DataNodeNIOServer extends Thread{
                         ThreadUtils.println("文件读取完毕，返回响应给客户端：" + remoteAddr);
 
                         nameNodeRpcClient.informReplicaReceived(filename.relativeFilename);
+
+                        ThreadUtils.println("增量上传文件副本给NameNode节点...");
                     }else {
                         // 将未完成完整读取的图片数据添加到缓存中
                         CachedImage cachedImage = new CachedImage(filename, imageLength, hasReadImageLength);

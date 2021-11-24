@@ -37,7 +37,7 @@ public class NameNodeRpcServer {
 				.build()
 				.start();
 
-		ThreadUntils.println("NameNodeRpcServer启动，监听端口号：" + DEFAULT_PORT);
+		ThreadUtils.println("NameNodeRpcServer启动，监听端口号：" + DEFAULT_PORT);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

@@ -31,9 +31,15 @@ public class DataNodeManager {
      * @param hostname
      */
     public Boolean register(String ip, String hostname,Integer nioPort) {
+        String mapKey = ip + "-" + hostname;
+        if (datanodeInfoMap.containsKey(mapKey)){
+            ThreadUtils.println("当前主机已注册到NameNode节点：ip+hostname=" + mapKey);
+            return false;
+        }
+
         DataNodeInfo datanode = new DataNodeInfo(ip, hostname,nioPort);
-        datanodeInfoMap.put(ip + "-" + hostname, datanode);
-        ThreadUntils.println("DataNode注册：ip=" + ip + ",hostname=" + hostname + ",nioPort=" + nioPort);
+        datanodeInfoMap.put(mapKey, datanode);
+        ThreadUtils.println("DataNode注册：ip=" + ip + ",hostname=" + hostname + ",nioPort=" + nioPort);
         return true;
     }
 
@@ -46,7 +52,7 @@ public class DataNodeManager {
     public Boolean heartbeat(String ip, String hostname) {
         DataNodeInfo datanode = datanodeInfoMap.get(ip + "-" + hostname);
         datanode.setLatestHeartbeatTime(System.currentTimeMillis());
-        ThreadUntils.println("DataNode发送心跳：ip=" + ip + ",hostname=" + hostname);
+        ThreadUtils.println("DataNode发送心跳：ip=" + ip + ",hostname=" + hostname);
         return true;
     }
 
@@ -113,11 +119,11 @@ public class DataNodeManager {
                     DataNodeInfo datanode = null;
                     while(datanodesIterator.hasNext()) {
                         datanode = datanodesIterator.next();
-                        if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 9000 * 1000) {
+                        // 每 60s 执行一次检测
+                        if(System.currentTimeMillis() - datanode.getLatestHeartbeatTime() > 60 * 1000) {
                             toRemoveDatanodes.add(datanode.getIp() + "-" + datanode.getHostname());
                         }
                     }
-
                     if(!toRemoveDatanodes.isEmpty()) {
                         synchronized (this){
                             for(String toRemoveDatanode : toRemoveDatanodes) {
@@ -125,7 +131,6 @@ public class DataNodeManager {
                             }
                         }
                     }
-
                     Thread.sleep(3000 * 1000);
                 }
             } catch (Exception e) {

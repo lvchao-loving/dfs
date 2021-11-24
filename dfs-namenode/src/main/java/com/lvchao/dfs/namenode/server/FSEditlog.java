@@ -2,10 +2,7 @@ package com.lvchao.dfs.namenode.server;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -194,7 +191,7 @@ public class FSEditlog {
 				try {
 					// fsNamesystem.getCheckpointTxid();
 					TimeUnit.MILLISECONDS.sleep(EDIT_LOGCLEAN_Interval);
-					ThreadUntils.println("EditLogClean线程睡眠..." + EDIT_LOGCLEAN_Interval + "毫秒");
+					ThreadUtils.println("EditLogClean线程睡眠..." + EDIT_LOGCLEAN_Interval + "毫秒");
 					List<String> flushedTxids = getFlushedTxids();
 					if (flushedTxids != null && flushedTxids.size() > 0){
 						Long checkpointTxid = fsNamesystem.getCheckpointTxid();
@@ -207,7 +204,7 @@ public class FSEditlog {
 								String filePath = "F:\\editslog\\edits-" + startTxid + "-" + endTxid + ".log";
 								File file = new File(filePath);
 								if (file.exists()){
-									ThreadUntils.println("发现editlog日志文件不需要 ，进行删除" + filePath);
+									ThreadUtils.println("发现editlog日志文件不需要 ，进行删除" + filePath);
 									file.delete();
 								}
 							}

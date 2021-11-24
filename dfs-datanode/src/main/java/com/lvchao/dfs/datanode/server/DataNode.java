@@ -21,7 +21,17 @@ public class DataNode {
 	 * 负责跟一组NameNode通信的组件
 	 */
 	private NameNodeRpcClient nameNodeRpcClient;
-	
+
+	/**
+	 * 文件磁盘管理器
+	 */
+	private StorageManager storageManager;
+
+	/**
+	 * 心跳发送组件
+	 */
+	private HeartbeatManager heartbeatManager;
+
 	/**
 	 * 初始化DataNode
 	 */
@@ -32,56 +42,28 @@ public class DataNode {
 		// 创建和nameNode网络通信组件，并启动
 		this.nameNodeRpcClient = new NameNodeRpcClient();
 
-		// 发送注册请求
+		// 发送注册请求-并更具注册请求处理
 		Boolean registerFlag = this.nameNodeRpcClient.register();
-		if (registerFlag){
-			// 启动发送心跳请求（定时发送心跳）
-			this.nameNodeRpcClient.startHeartbeat();
-
-			StorageInfo storageInfo = getDataNodeStoredInfo();
-
-			// 向NameNode发送数据
-			this.nameNodeRpcClient.reportCompleteStorageInfo(storageInfo);
-
-			// 创建上传图片线程
-			DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(this.nameNodeRpcClient);
-			dataNodeNIOServer.setName("DataNodeNIOServer");
-			dataNodeNIOServer.start();
-		}else {
+		if (!registerFlag){
 			System.out.println("向NameNode注册失败，直接退出......");
 			System.exit(1);
 		}
-	}
 
-	/**
-	 * 获取 DataNode 节点存储信息
-	 * @return
-	 */
-	private StorageInfo getDataNodeStoredInfo() {
-		StorageInfo storageInfo = new StorageInfo();
+		this.storageManager = new StorageManager();
 
-		File fileDir = new File(dataNodeConfig.DATA_DIR);
+		this.heartbeatManager = new HeartbeatManager(this.nameNodeRpcClient, this.storageManager);
+		this.heartbeatManager.start();
 
-		scanFils(fileDir,storageInfo);
+		StorageInfo dataNodeStoredInfo = this.storageManager.getDataNodeStoredInfo();
 
-		return storageInfo;
-	}
+		// 向NameNode发送数据
+		this.nameNodeRpcClient.reportCompleteStorageInfo(dataNodeStoredInfo);
 
-	/**
-	 * 扫描遍历所有文件
-	 * @param fileDir
-	 * @param storageInfo
-	 */
-	private void scanFils(File fileDir, StorageInfo storageInfo){
-		File[] fileList = fileDir.listFiles();
-		for (File file:fileList) {
-			if (file.isFile()){
-				storageInfo.addStoredDataSize(file.length());
-				storageInfo.addFilename(file.getPath().replace(dataNodeConfig.DATA_DIR,"").replace("\\","/"));
-			}else {
-				scanFils(file,storageInfo);
-			}
-		}
+		// 创建上传图片线程
+		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(this.nameNodeRpcClient);
+		dataNodeNIOServer.setName("DataNodeNIOServer");
+		dataNodeNIOServer.start();
+
 	}
 
 	/**

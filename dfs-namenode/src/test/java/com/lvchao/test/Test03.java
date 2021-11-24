@@ -1,6 +1,6 @@
 package com.lvchao.test;
 
-import com.lvchao.dfs.namenode.server.ThreadUntils;
+import com.lvchao.dfs.namenode.server.ThreadUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -63,7 +63,7 @@ public class Test03 extends Thread{
                         int count = socketChannel.read(byteBuffer);
 
                         if (count > 0){
-                            ThreadUntils.println("上传fsimage文件成功，响应消息为：" + new String(byteBuffer.array(), 0, count));
+                            ThreadUtils.println("上传fsimage文件成功，响应消息为：" + new String(byteBuffer.array(), 0, count));
                             socketChannel.close();
                             uploading = false;
                         }

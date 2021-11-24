@@ -1,6 +1,6 @@
 package com.lvchao.test;
 
-import com.lvchao.dfs.namenode.server.ThreadUntils;
+import com.lvchao.dfs.namenode.server.ThreadUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,7 +55,7 @@ public class Test02 extends Thread{
 
     @Override
     public void run() {
-        ThreadUntils.println("FSImageUploadServer 成功启动...");
+        ThreadUtils.println("FSImageUploadServer 成功启动...");
         while (true){
             try{
                 // 当 selector 中没有对应的 selectionKey 事件触发时阻塞
@@ -128,7 +128,7 @@ public class Test02 extends Thread{
             int read = socketChannel.read(buffer);
             // 当 read为-1 时说明正常断开连接
             if (read == -1){
-                ThreadUntils.println("正常关闭key");
+                ThreadUtils.println("正常关闭key");
                 key.cancel();
                 return;
             }
@@ -144,12 +144,12 @@ public class Test02 extends Thread{
                     FileChannel fsimageFileChannel = fsimageOut.getChannel();
             ){
                 if (read == 0){
-                    ThreadUntils.println("没有读取到任何数据！");
+                    ThreadUtils.println("没有读取到任何数据！");
                     return;
                 }
                 do {
                     buffer.flip();
-                    ThreadUntils.println("接收到的数据写入文件：" + StandardCharsets.UTF_8.decode(buffer));
+                    ThreadUtils.println("接收到的数据写入文件：" + StandardCharsets.UTF_8.decode(buffer));
                     buffer.rewind();
                     fsimageFileChannel.write(buffer);
                     buffer.clear();

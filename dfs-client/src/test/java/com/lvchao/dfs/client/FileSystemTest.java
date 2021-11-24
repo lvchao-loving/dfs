@@ -27,7 +27,7 @@ public class FileSystemTest {
     public static void main(String[] args) throws Exception {
         // testMkdir();
         // testShutdown();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             testCreateFile();
         }
 
@@ -57,8 +57,7 @@ public class FileSystemTest {
      * @throws Exception
      */
     private static void testCreateFile() throws Exception {
-       // File file = new File("F:\\tmp\\lvchao.jpg");
-        File file = new File("F:\\tmp\\1.pdf");
+        File file = new File("F:\\tmp\\lvchao.jpg");
         Long fileLength = file.length();
         FileInputStream fileInputStream = new FileInputStream(file);
         FileChannel fileChannel = fileInputStream.getChannel();
@@ -71,7 +70,7 @@ public class FileSystemTest {
         fileInputStream.close();
         ThreadUtils.println("发送的文件长度：" + fileLength + "，发送文件的名称：iphone001.jpg");
         String s = UUID.randomUUID().toString();
-        filesystem.upload(buffer.array(), "/image/product/iphone " + s + ".jpg",fileLength);
+        filesystem.upload(buffer.array(), "/image/product/iphone" + s + ".jpg",fileLength);
     }
    /* private static void testCreateFile() throws Exception {
        // File file = new File("F:\\tmp\\lvchao.jpg");

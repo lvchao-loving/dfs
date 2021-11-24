@@ -1,10 +1,13 @@
 package com.lvchao.dfs.datanode.server;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.lvchao.dfs.namenode.rpc.model.*;
 import com.lvchao.dfs.namenode.rpc.service.NameNodeServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 负责跟一组NameNode中的某一个进行通信的线程组件
@@ -46,12 +49,16 @@ public class NameNodeRpcClient {
 	}
 	
 	/**
-	 * 开启发送心跳的线程
+	 * 开启发送心跳请求
 	 */
-	public void startHeartbeat() {
-		HeartbeatThread heartbeatThread = new HeartbeatThread();
-		heartbeatThread.setName("HeartbeatThread");
-		heartbeatThread.start();
+	public HeartbeatResponse heartbeat() {
+		HeartbeatRequest request = HeartbeatRequest.newBuilder()
+				.setIp(dataNodeConfig.DATANODE_IP)
+				.setHostname(dataNodeConfig.DATANODE_HOSTNAME)
+				.setNioPort(dataNodeConfig.NIO_PORT)
+				.build();
+
+		return namenode.heartbeat(request);
 	}
 
 	/**
@@ -66,60 +73,19 @@ public class NameNodeRpcClient {
 
 	/**
 	 * 上报master
+	 *
 	 * @param storageInfo
 	 */
 	public void reportCompleteStorageInfo(StorageInfo storageInfo) {
-		System.out.println(storageInfo.getFilenames());
-		System.out.println("-----------");
-		System.out.println(storageInfo.getStoredDataSize());
-	}
+		if (storageInfo.getStoredDataSize() == 0 || storageInfo.getFilenames().size() == 0) {
+			ThreadUtils.println("不需要全量上报，StorageInfo->" + JSON.toJSONString(storageInfo));
+			return;
+		}
 
-	/**
-	 * 负责注册的线程
-	 */
-	class RegisterThread extends Thread {
-		
-		@Override
-		public void run() {
-			try {
-				ThreadUtils.println("发送RPC请求到NameNode进行注册.......");
-				
-				RegisterRequest request = RegisterRequest.newBuilder()
-						.setIp(dataNodeConfig.DATANODE_IP)
-						.setHostname(dataNodeConfig.DATANODE_HOSTNAME)
-						.setNioPort(dataNodeConfig.NIO_PORT)
-						.build();
-				RegisterResponse response = namenode.register(request);
-				ThreadUtils.println("接收到NameNode返回的注册响应：" + response.getStatus());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	/**
-	 * 负责心跳的线程
-	 */
-	class HeartbeatThread extends Thread {
-		
-		@Override
-		public void run() {
-			try {
-				ThreadUtils.println("定时心跳线程启动.......");
-				while(true) {
-					HeartbeatRequest request = HeartbeatRequest.newBuilder()
-							.setIp(dataNodeConfig.DATANODE_IP)
-							.setHostname(dataNodeConfig.DATANODE_HOSTNAME)
-							.setNioPort(dataNodeConfig.NIO_PORT)
-							.build();
-					HeartbeatResponse response = namenode.heartbeat(request);
-					ThreadUtils.println("发送后接收到NameNode返回的心跳响应：" + response.getStatus());
-					// 每隔30秒发送一次心跳到NameNode上去
-					Thread.sleep(30 * 1000);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		ReportCompleteStorageInfoRequest request = ReportCompleteStorageInfoRequest.newBuilder().setIp(dataNodeConfig.DATANODE_IP)
+				.setHostname(dataNodeConfig.DATANODE_HOSTNAME).setFilenames(JSONArray.toJSONString(storageInfo.getFilenames()))
+				.setStoredDataSize(storageInfo.getStoredDataSize()).build();
+		namenode.reportCompleteStorageInfo(request);
+		ThreadUtils.println("全量上报，StorageInfo->" + JSON.toJSONString(storageInfo));
 	}
 }

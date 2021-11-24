@@ -11,7 +11,7 @@ import java.util.Date;
  * @date: 2021/11/13 12:47
  * @version: V1.0
  */
-public class ThreadUntils {
+public class ThreadUtils {
 
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 

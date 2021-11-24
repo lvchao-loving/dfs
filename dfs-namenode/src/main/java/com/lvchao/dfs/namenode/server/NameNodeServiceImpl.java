@@ -66,12 +66,15 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	@Override
 	public void register(RegisterRequest request, 
 			StreamObserver<RegisterResponse> responseObserver) {
-		datanodeManager.register(request.getIp(), request.getHostname(), request.getNioPort());
-		
-		RegisterResponse response = RegisterResponse.newBuilder()
-				.setStatus(STATUS_SUCCESS)
-				.build();
-	
+		// 注册服务
+		Boolean registerFlag = datanodeManager.register(request.getIp(), request.getHostname(), request.getNioPort());
+
+		RegisterResponse response = null;
+		if (registerFlag){
+			response = RegisterResponse.newBuilder().setStatus(STATUS_SUCCESS).build();
+		}else{
+			response = RegisterResponse.newBuilder().setStatus(STATUS_FAILURE).build();
+		}
 		responseObserver.onNext(response);
 		responseObserver.onCompleted();
 	}
@@ -164,7 +167,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 
 		// NameNode-没有同步过磁盘，如果有数据的话也仅仅在内存中
 		if(flushedTxids.size() == 0) {
-			ThreadUntils.println("暂时没有任何磁盘文件，直接从内存缓冲中拉取editslog......");
+			ThreadUtils.println("暂时没有任何磁盘文件，直接从内存缓冲中拉取editslog......");
 			fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 		}
 		// NameNode-同步过磁盘，从磁盘中拉取数据
@@ -172,7 +175,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 			// 有磁盘文件，缓存中有存储过磁盘文件
 			if(bufferedFlushedTxid != null) {
 				if (existInFlushedFile(syncedTxid, bufferedFlushedTxid)){
-					ThreadUntils.println("上一次已经缓存过磁盘文件的数据，直接从磁盘文件缓存中拉取editslog......");
+					ThreadUtils.println("上一次已经缓存过磁盘文件的数据，直接从磁盘文件缓存中拉取editslog......");
 					fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 				}
 				// 拉取的数据不再当前缓存的配置文件中，需要从下一个磁盘文件中拉取
@@ -180,12 +183,12 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 					String nextFlushedTxid = getNextFlushedTxid(flushedTxids, bufferedFlushedTxid);
 					// 如果可以找到下一个磁盘文件，那么就从下一个磁盘文件里开始读取数据
 					if(nextFlushedTxid != null) {
-						ThreadUntils.println("上一次缓存的磁盘文件找不到要拉取的数据，从下一个磁盘文件中拉取editslog......");
+						ThreadUtils.println("上一次缓存的磁盘文件找不到要拉取的数据，从下一个磁盘文件中拉取editslog......");
 						fetchFromFlushedFile(syncedTxid,nextFlushedTxid, fetchedEditsLog);
 					}
 					// 如果没有找到下一个文件，此时就需要从内存里去继续读取
 					else {
-						ThreadUntils.println("上一次缓存的磁盘文件找不到要拉取的数据，而且没有下一个磁盘文件，尝试从内存缓冲中拉取editslog......");
+						ThreadUtils.println("上一次缓存的磁盘文件找不到要拉取的数据，而且没有下一个磁盘文件，尝试从内存缓冲中拉取editslog......");
 						fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 					}
 				}
@@ -198,7 +201,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 				for (String flushedTxid:flushedTxids) {
 					// 判断需要下次拉取的 txid 是否在当前缓存文件中
 					if (existInFlushedFile(syncedTxid, flushedTxid)){
-						ThreadUntils.println("尝试从磁盘文件中拉取editslog，flushedTxid=" + flushedTxid);
+						ThreadUtils.println("尝试从磁盘文件中拉取editslog，flushedTxid=" + flushedTxid);
 						// 将对应的磁盘文件加载到内存中
 						fetchFromFlushedFile(syncedTxid, flushedTxid, fetchedEditsLog);
 						fetchedFromFlushedFile = true;
@@ -208,7 +211,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 
 				// 遍历所有文件没有找到则从缓存中去继续读取
 				if(!fetchedFromFlushedFile){
-					ThreadUntils.println("所有磁盘文件都没找到要拉取的editslog，尝试直接从内存缓冲中拉取editslog......");
+					ThreadUtils.println("所有磁盘文件都没找到要拉取的editslog，尝试直接从内存缓冲中拉取editslog......");
 					fetchFromBufferedEditsLog(syncedTxid, fetchedEditsLog);
 				}
 			}
@@ -389,7 +392,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		Long fetchTxid = syncedTxid + 1;
 
 		if(fetchTxid <= currentBufferedMaxTxid) {
-			ThreadUntils.println("尝试从内存缓冲拉取的时候，发现上一次内存缓存有数据可供拉取......");
+			ThreadUtils.println("尝试从内存缓冲拉取的时候，发现上一次内存缓存有数据可供拉取......");
 			fetchFromCurrentBuffer(syncedTxid, fetchedEditsLog);
 			return;
 		}

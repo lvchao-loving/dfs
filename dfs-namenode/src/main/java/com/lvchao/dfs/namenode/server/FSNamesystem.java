@@ -1,5 +1,7 @@
 package com.lvchao.dfs.namenode.server;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,7 +86,7 @@ public class FSNamesystem {
 	}
 
 	public void setCheckpointTxid(Long checkpointTxid) {
-		ThreadUntils.println("接收到的checkpointTxid:" + checkpointTxid);
+		ThreadUtils.println("接收到的checkpointTxid:" + checkpointTxid);
 		this.checkpointTxid = checkpointTxid;
 	}
 
@@ -120,7 +122,7 @@ public class FSNamesystem {
 			){
 				fileChannel.write(StandardCharsets.UTF_8.encode(String.valueOf(checkpointTxid)));
 				fileChannel.force(true);
-				ThreadUntils.println("保存checkpointTxid:" + checkpointTxid);
+				ThreadUtils.println("保存checkpointTxid:" + checkpointTxid);
 			} catch (Exception e){
 				e.printStackTrace();
 			}
@@ -159,7 +161,7 @@ public class FSNamesystem {
 				}
 			}
 			if (fileList.size() == 0){
-				ThreadUntils.println("无 fsimage 文件不需要文件恢复");
+				ThreadUtils.println("无 fsimage 文件不需要文件恢复");
 				return;
 			}
 
@@ -202,7 +204,7 @@ public class FSNamesystem {
 			String filePath = checkpintTxidFilePath;
 			File file = new File(filePath);
 			if(!file.exists()) {
-				ThreadUntils.println("启动恢复checkpointTxid 文件不存在!");
+				ThreadUtils.println("启动恢复checkpointTxid 文件不存在!");
 				return;
 			}
 			try (
@@ -214,7 +216,7 @@ public class FSNamesystem {
 				StringBuilder message = new StringBuilder();
 				while (true) {
 					if (fileChannel.read(byteBuffer) <= 0) {
-						ThreadUntils.println("退出读取文件循环");
+						ThreadUtils.println("退出读取文件循环");
 						break;
 					}
 					byteBuffer.flip();
@@ -238,7 +240,7 @@ public class FSNamesystem {
 		File file = new File(path);
 		// 文件不存在则说明不需要恢复
 		if (!file.exists()){
-			ThreadUntils.println("fsimage文件不存在，不需要进行恢复");
+			ThreadUtils.println("fsimage文件不存在，不需要进行恢复");
 			return;
 		}
 		try (
@@ -249,7 +251,7 @@ public class FSNamesystem {
 			StringBuilder fsimageSB = new StringBuilder();
 			while (true) {
 				if (fileChannel.read(byteBuffer) <= 0) {
-					ThreadUntils.println("退出读取文件循环");
+					ThreadUtils.println("退出读取文件循环");
 					break;
 				}
 				byteBuffer.flip();
@@ -279,18 +281,24 @@ public class FSNamesystem {
 	 * @param filename
 	 * @throws Exception
 	 */
-	public void addReceivedReplica(String hostname, String ip, String filename) throws Exception{
-		synchronized (replicasByFilename){
+	public void addReceivedReplica(String hostname, String ip, String filename) throws Exception {
+		synchronized (replicasByFilename) {
 			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
 
-			if (dataNodeInfoList == null){
+			if (dataNodeInfoList == null) {
 				dataNodeInfoList = new ArrayList<DataNodeInfo>();
-				replicasByFilename.put(filename,dataNodeInfoList);
+				replicasByFilename.put(filename, dataNodeInfoList);
 			}
 
 			DataNodeInfo dataNodeInfo = dataNodeManager.getDataNodeInfo(ip, hostname);
 
 			dataNodeInfoList.add(dataNodeInfo);
 		}
+
+		ThreadUtils.println("遍历数据开始");
+		for (String key : replicasByFilename.keySet()) {
+			ThreadUtils.println(key + "--------" + JSONArray.toJSONString(replicasByFilename.get(key)));
+		}
+		ThreadUtils.println("遍历数据开始");
 	}
 }
