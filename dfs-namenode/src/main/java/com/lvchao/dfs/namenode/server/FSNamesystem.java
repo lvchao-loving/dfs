@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 负责管理元数据的核心组件
@@ -42,7 +43,10 @@ public class FSNamesystem {
 	 * 每个文件对应的副本所在的DataNode节点信息
 	 */
 	private Map<String,List<DataNodeInfo>> replicasByFilename = new HashMap<>();
-
+	/**
+	 * 读写分离锁
+	 */
+	private ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
 	/**
 	 * 构造函数，初始化组件
 	 * @param dataNodeManager
@@ -282,7 +286,8 @@ public class FSNamesystem {
 	 * @throws Exception
 	 */
 	public void addReceivedReplica(String hostname, String ip, String filename) throws Exception {
-		synchronized (replicasByFilename) {
+		try {
+			reentrantReadWriteLock.writeLock().lock();
 			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
 
 			if (dataNodeInfoList == null) {
@@ -293,12 +298,37 @@ public class FSNamesystem {
 			DataNodeInfo dataNodeInfo = dataNodeManager.getDataNodeInfo(ip, hostname);
 
 			dataNodeInfoList.add(dataNodeInfo);
+		} finally {
+			reentrantReadWriteLock.writeLock().unlock();
 		}
-
+/*
 		ThreadUtils.println("遍历数据开始");
 		for (String key : replicasByFilename.keySet()) {
 			ThreadUtils.println(key + "--------" + JSONArray.toJSONString(replicasByFilename.get(key)));
 		}
-		ThreadUtils.println("遍历数据开始");
+		ThreadUtils.println("遍历数据开始");*/
+	}
+
+	/**
+	 * 通过文件名称随机返回一台存储图片的服务器
+	 * @param filename
+	 * @return
+	 */
+	public DataNodeInfo getDataNodeForFile(String filename) {
+		try {
+			reentrantReadWriteLock.readLock().lock();
+			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+
+			if (dataNodeInfoList == null || dataNodeInfoList.size() == 0){
+				ThreadUtils.println("当前存储的图片路径不存在...");
+				return null;
+			}
+
+			int index = new Random().nextInt(dataNodeInfoList.size());
+
+			return dataNodeInfoList.get(index);
+		} finally {
+			reentrantReadWriteLock.readLock().unlock();
+		}
 	}
 }

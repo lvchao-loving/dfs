@@ -1,5 +1,6 @@
 package com.lvchao.dfs.namenode.server;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.lvchao.dfs.namenode.rpc.model.*;
@@ -329,6 +330,25 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 						.setStatus(STATUS_SUCCESS)
 						.build();
 			}
+			responseObserver.onNext(response);
+			responseObserver.onCompleted();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * 描述：通过 filename 发起请求，返回 file 对应存储的 DataNode
+	 * @param request
+	 * @param responseObserver
+	 */
+	@Override
+	public void getDataNodeForFile(GetDataNodeForFileRequest request, StreamObserver<GetDataNodeForFileResponse> responseObserver) {
+		try {
+			String filename = request.getFilename();
+			DataNodeInfo dataNodeInfo = namesystem.getDataNodeForFile(filename);
+			GetDataNodeForFileResponse response = GetDataNodeForFileResponse.newBuilder()
+					.setDatanodeInfo(JSON.toJSONString(dataNodeInfo)).build();
 			responseObserver.onNext(response);
 			responseObserver.onCompleted();
 		} catch (Exception e) {
