@@ -8,6 +8,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * @Title: NIOClient
@@ -18,7 +19,6 @@ import java.util.Iterator;
  * @version: V1.0
  */
 public class NIOClient {
-
     /**
      * 发送文件标识
      */
@@ -28,19 +28,23 @@ public class NIOClient {
      */
     public static final Integer READ_FILE = 2;
 
-   /**
+    /**
      * 短链接发送数据
+     * @param hostname
+     * @param nioPort
      * @param file
+     * @param filename
      * @param fileSize
      */
     public static void sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
-        try(
-            SocketChannel socketChannel = SocketChannel.open();
-            Selector selector = Selector.open();
-                ){
+        SocketChannel socketChannel = null;
+        Selector selector = null;
+        try {
+            socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
             socketChannel.connect(new InetSocketAddress(hostname,nioPort));
 
+            selector = Selector.open();
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
             boolean sending = true;
@@ -71,7 +75,7 @@ public class NIOClient {
                         ByteBuffer buffer = ByteBuffer.allocate(2);
                         while (channel.read(buffer) > 0){
                             buffer.flip();
-                            fileContentSB.append(StandardCharsets.UTF_8.decode(buffer).toString());
+                            fileContentSB.append(new String(buffer.array()));
                             buffer.clear();
                         }
                         String channelContent = fileContentSB.toString();
@@ -80,9 +84,23 @@ public class NIOClient {
                     }
                 }
             }
-
         }catch (Exception e){
             e.printStackTrace();
+        } finally {
+            if (socketChannel != null){
+                try {
+                    socketChannel.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (selector != null){
+                try {
+                    selector.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -116,10 +134,10 @@ public class NIOClient {
      * @param nioPort
      * @param filename
      */
-    public void readFile(String hostname, Integer nioPort, String filename){
+    public byte[] readFile(String hostname, Integer nioPort, String filename){
         SocketChannel socketChannel = null;
         Selector selector = null;
-
+        byte[] byteArray = null;
         try {
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
@@ -129,7 +147,9 @@ public class NIOClient {
             socketChannel.register(selector,SelectionKey.OP_CONNECT);
 
             boolean reading = true;
-
+            Long fileLength = null;
+            ByteBuffer fileLengthBuffer = null;
+            ByteBuffer fileBuffer = null;
             while (reading){
                 selector.select();
 
@@ -154,23 +174,39 @@ public class NIOClient {
                         byteBuffer.putInt(filenameLength);
                         byteBuffer.put(filename.getBytes());
                         byteBuffer.flip();
-                        int sentData = socketChannel.write(byteBuffer);
-                        ThreadUtils.println("已经发送了" + sentData + "字节的数据到" + hostname + "机器的" + nioPort + "端口上");
+                        int sentDataLen = socketChannel.write(byteBuffer);
+                        ThreadUtils.println("已经发送了" + sentDataLen + "字节的数据到" + hostname + "机器的" + nioPort + "端口上");
                         // 注册读请求事件
                         socketChannel.register(selector,SelectionKey.OP_READ);
                     }else if (key.isReadable()){
                         socketChannel = (SocketChannel) key.channel();
-                        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
-                        int len = socketChannel.read(byteBuffer);
-                        if (len > 0){
-                            byte[] array = byteBuffer.array();
-                            ThreadUtils.println("接收到响应数据：" + new String(array,0,len));
+
+                        if (Objects.isNull(fileLength)){
+                            if (Objects.isNull(fileLengthBuffer)){
+                                fileLengthBuffer = ByteBuffer.allocate(8);
+                            }
+                            socketChannel.read(fileLengthBuffer);
+                            if (!fileLengthBuffer.hasRemaining()) {
+                                fileLengthBuffer.flip();
+                                fileLength = fileLengthBuffer.getLong();
+                            } else {
+                                continue;
+                            }
+                        }
+                        if (Objects.isNull(fileBuffer)){
+                            fileBuffer = ByteBuffer.allocate(fileLength.intValue());
+                        }
+                        socketChannel.read(fileBuffer);
+                        if (!fileBuffer.hasRemaining()) {
+                            fileBuffer.flip();
+                            byteArray = fileBuffer.array();
                             reading = false;
+                        } else {
+                            continue;
                         }
                     }
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -189,5 +225,6 @@ public class NIOClient {
                 }
             }
         }
+        return byteArray;
     }
 }
