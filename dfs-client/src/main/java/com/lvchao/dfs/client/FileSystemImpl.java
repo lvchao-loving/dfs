@@ -68,6 +68,26 @@ public class FileSystemImpl implements FileSystem{
         return true;
     }
 
+    @Override
+    public byte[] download(String filename) throws Exception {
+        // 第一个步骤，一定是调用NameNode的接口，获取这个文件的某个副本所在的DataNode
+        // 第二个步骤，打开一个针对那个DataNode的网络连接，发送文件名过去
+        // 第三个步骤，尝试从连接中读取对方传输过来的文件
+        // 第四个步骤，读取到文件之后不需要写入本地的磁盘中，而是转换为一个字节数组返回即可
+
+        // 第一步骤：调用NameNode接口，获取文件名对应的存储DateNode服务信息
+        JSONObject dataNodeInfoJSON =  getDataNodeInfoForFile(filename);
+
+
+        return new byte[0];
+    }
+
+    private JSONObject getDataNodeInfoForFile(String filename) {
+        GetDataNodeForFileRequest request = GetDataNodeForFileRequest.newBuilder().setFilename(filename).build();
+        GetDataNodeForFileResponse dataNodeForFile = namenode.getDataNodeForFile(request);
+        return JSONObject.parseObject(dataNodeForFile.getDatanodeInfo());
+    }
+
     /**
      * 发送创建元数据请求
      * @param filename
