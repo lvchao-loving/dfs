@@ -227,8 +227,6 @@ public class FSDirectory {
 
     /**
      * 代表文件目录树中的一个目录
-     * @author zhonghuashishan
-     *
      */
     public static class INode {
 

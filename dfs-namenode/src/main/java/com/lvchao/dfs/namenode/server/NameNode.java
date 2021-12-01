@@ -44,7 +44,7 @@ public class NameNode {
 		this.rpcServer.start();
 		this.rpcServer.blockUntilShutdown();
 	}
-		
+
 	public static void main(String[] args) throws Exception {		
 		NameNode namenode = new NameNode();
 		namenode.initialize();

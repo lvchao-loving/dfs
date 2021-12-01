@@ -3,12 +3,14 @@ package com.lvchao.dfs.client;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Title: NIOClient
@@ -29,25 +31,28 @@ public class NIOClient {
     public static final Integer READ_FILE = 2;
 
     /**
-     * 短链接发送数据
+     * 短链接-发送数据
      * @param hostname
      * @param nioPort
      * @param file
      * @param filename
      * @param fileSize
      */
-    public static void sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
+    public void sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
         SocketChannel socketChannel = null;
         Selector selector = null;
         try {
+            selector = Selector.open();
+
             socketChannel = SocketChannel.open();
+            // 使用selector时，必须设置成非阻塞
             socketChannel.configureBlocking(false);
             socketChannel.connect(new InetSocketAddress(hostname,nioPort));
 
-            selector = Selector.open();
             socketChannel.register(selector, SelectionKey.OP_CONNECT);
 
             boolean sending = true;
+            ByteBuffer buffer = null;
 
             while (sending){
                 selector.select();
@@ -58,25 +63,43 @@ public class NIOClient {
 
                     // NIO 是否允许进行连接
                     if (key.isConnectable()){
-                        SocketChannel channel = (SocketChannel) key.channel();
+                        socketChannel = (SocketChannel) key.channel();
                         // NIO 是否正在连接
-                        if (channel.isConnectionPending()){
-                            // 等待三次握手的完成
-                            channel.finishConnect();
-                            ByteBuffer buffer = loadBufferData(file,filename,fileSize);
-                            int write = channel.write(buffer);
-                            ThreadUtils.println("已经发送了" + write + "字节的数据");
-                            channel.register(selector,SelectionKey.OP_READ);
+                        if (socketChannel.isConnectionPending()){
+                            // 等待三次握手的完成，连接建立好
+                            while (!socketChannel.finishConnect()){
+                                TimeUnit.MILLISECONDS.sleep(100);
+                            }
                         }
-                    }else if (key.isReadable()){
-                        SocketChannel channel = (SocketChannel) key.channel();
+                        buffer = loadBufferData(file,filename,fileSize);
+                        int writeDataLen = socketChannel.write(buffer);
+                        ThreadUtils.println("已经发送了" + writeDataLen + "bytes的数据到服务端");
+                        if (buffer.hasRemaining()){
+                            ThreadUtils.println("本次数据包没有发送完毕，下次回继续发送...");
+                            key.interestOps(SelectionKey.OP_WRITE);
+                        }else {
+                            ThreadUtils.println("本次数据包发送完毕，准备读取服务端的响应");
+                            key.interestOps(SelectionKey.OP_READ);
+                        }
+                    } else if (key.isWritable()){
+                        socketChannel = (SocketChannel) key.channel();
+                        int writeDataLen = socketChannel.write(buffer);
+                        ThreadUtils.println("再一次发送了" + writeDataLen + "bytes的数据到服务端");
+                        if (!buffer.hasRemaining()){
+                            ThreadUtils.println("本次数据包没有发送完毕，下次回继续发送...");
+                            key.interestOps(SelectionKey.OP_READ);
+                        }else {
+                            ThreadUtils.println("发送完了数据到服务端");
+                        }
+                    } else if (key.isReadable()){
+                        socketChannel = (SocketChannel) key.channel();
                         // 读取响应数据
                         StringBuilder fileContentSB = new StringBuilder();
-                        ByteBuffer buffer = ByteBuffer.allocate(2);
-                        while (channel.read(buffer) > 0){
-                            buffer.flip();
-                            fileContentSB.append(new String(buffer.array()));
-                            buffer.clear();
+                        ByteBuffer readBuffer = ByteBuffer.allocate(8);
+                        while (socketChannel.read(readBuffer) > 0){
+                            readBuffer.flip();
+                            fileContentSB.append(new String(readBuffer.array()));
+                            readBuffer.clear();
                         }
                         String channelContent = fileContentSB.toString();
                         ThreadUtils.println("接收到的服务消息为：" + channelContent);
@@ -111,14 +134,14 @@ public class NIOClient {
      * @param fileSize
      * @return
      */
-    private static ByteBuffer loadBufferData(byte[] file, String filename, Long fileSize) {
+    public ByteBuffer loadBufferData(byte[] file, String filename, Long fileSize) {
         // 计算分配 ByteBuffer 长度
         byte[] filenameBytes = filename.getBytes();
         /**
-         * 计算分配bytebuffer的长度 = 4 + filenameBytes.length + 8 + fileSize.intValue() + 8
-         * 计算分配bytebuffer的长度 = 文件名称长度 + 文件名称 + 文件长度 + 文件 + 扩展8字节
+         * 计算分配bytebuffer的长度 = 4 + 4 + filenameBytes.length + 8 + fileSize.intValue()
+         * 计算分配bytebuffer的长度 = 发送消息类型 + 文件名称长度 + 文件名称 + 文件长度 + 文件
          */
-        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + filenameBytes.length + 8 + fileSize.intValue() + 8);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + 4 + filenameBytes.length + 8 + fileSize.intValue());
         byteBuffer.putInt(SEND_FILE);
         byteBuffer.putInt(filenameBytes.length);
         byteBuffer.put(filename.getBytes());
@@ -129,7 +152,7 @@ public class NIOClient {
     }
 
     /**
-     * 短链接读取文件
+     * 短链接-读取文件
      * @param hostname
      * @param nioPort
      * @param filename
@@ -139,11 +162,12 @@ public class NIOClient {
         Selector selector = null;
         byte[] byteArray = null;
         try {
+            selector = Selector.open();
+
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
             socketChannel.connect(new InetSocketAddress(hostname,nioPort));
 
-            selector = Selector.open();
             socketChannel.register(selector,SelectionKey.OP_CONNECT);
 
             boolean reading = true;
@@ -162,9 +186,12 @@ public class NIOClient {
                     if (key.isConnectable()){
                         socketChannel = (SocketChannel) key.channel();
 
+                        // NIO 是否正在连接
                         if (socketChannel.isConnectionPending()){
-                            // 如果正在连接则进入完成三次握手，TCP连接建立完成
-                            socketChannel.finishConnect();
+                            // 等待三次握手的完成，连接建立好
+                            while (!socketChannel.finishConnect()){
+                                TimeUnit.MILLISECONDS.sleep(100);
+                            }
                         }
 
                         int filenameLength = filename.getBytes().length;
@@ -207,7 +234,7 @@ public class NIOClient {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (socketChannel != null){

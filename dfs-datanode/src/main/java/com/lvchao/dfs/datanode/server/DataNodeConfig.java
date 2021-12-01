@@ -14,9 +14,9 @@ public class DataNodeConfig {
     public Integer NAMENODE_PORT = 50070;
 
     public String DATANODE_HOSTNAME = "localhost";
-    public String DATANODE_IP = "127.0.0.2";
-    public Integer NIO_PORT = 9302;
+    public String DATANODE_IP = "127.0.0.1";
+    public Integer NIO_PORT = 9301;
 
-    public String DATA_DIR = "F:\\tmp2";
+    public String DATA_DIR = "F:\\tmp1";
 
 }

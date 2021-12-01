@@ -21,6 +21,7 @@ public class FileSystemImpl implements FileSystem{
     private static final Integer NAMENODE_PORT = 50070;
 
     private NameNodeServiceGrpc.NameNodeServiceBlockingStub namenode;
+    private NIOClient nioClient;
 
     public FileSystemImpl(){
         ManagedChannel channel = NettyChannelBuilder
@@ -28,6 +29,7 @@ public class FileSystemImpl implements FileSystem{
                 .negotiationType(NegotiationType.PLAINTEXT)
                 .build();
         this.namenode = NameNodeServiceGrpc.newBlockingStub(channel);
+        this.nioClient = new NIOClient();
     }
 
     @Override
@@ -62,7 +64,7 @@ public class FileSystemImpl implements FileSystem{
             JSONObject datanode = datanodeArray.getJSONObject(i);
             String hostname = datanode.getString("hostname");
             Integer nioPort = datanode.getIntValue("nioPort");
-            NIOClient.sendFile(hostname, nioPort, file, filename, fileSize);
+            nioClient.sendFile(hostname, nioPort, file, filename, fileSize);
         }
 
         return true;
@@ -70,16 +72,12 @@ public class FileSystemImpl implements FileSystem{
 
     @Override
     public byte[] download(String filename) throws Exception {
-        // 第一个步骤，一定是调用NameNode的接口，获取这个文件的某个副本所在的DataNode
-        // 第二个步骤，打开一个针对那个DataNode的网络连接，发送文件名过去
-        // 第三个步骤，尝试从连接中读取对方传输过来的文件
-        // 第四个步骤，读取到文件之后不需要写入本地的磁盘中，而是转换为一个字节数组返回即可
-
-        // 第一步骤：调用NameNode接口，获取文件名对应的存储DateNode服务信息
         JSONObject dataNodeInfoJSON =  getDataNodeInfoForFile(filename);
 
+        String hostname = dataNodeInfoJSON.getString("hostname");
+        Integer nioPort = dataNodeInfoJSON.getInteger("nioPort");
 
-        return new byte[0];
+        return nioClient.readFile(hostname, nioPort ,filename);
     }
 
     private JSONObject getDataNodeInfoForFile(String filename) {

@@ -2,6 +2,7 @@ package com.lvchao.dfs.client;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -27,9 +28,11 @@ public class FileSystemTest {
     public static void main(String[] args) throws Exception {
         // testMkdir();
         // testShutdown();
-        for (int i = 0; i < 10; i++) {
+       /* for (int i = 0; i < 10; i++) {
             testCreateFile();
-        }
+        }*/
+      //  testCreateFile();
+        testReadFile();
 
     }
 
@@ -64,14 +67,28 @@ public class FileSystemTest {
         ByteBuffer buffer = ByteBuffer.allocate(fileLength.intValue());
         fileChannel.read(buffer);
         buffer.flip();
-        int length = buffer.array().length;
 
         fileChannel.close();
         fileInputStream.close();
-        ThreadUtils.println("发送的文件长度：" + fileLength + "，发送文件的名称：iphone001.jpg");
-        String s = UUID.randomUUID().toString();
-        filesystem.upload(buffer.array(), "/image/product/iphone" + s + ".jpg",fileLength);
+
+        String filename = UUID.randomUUID().toString();
+        ThreadUtils.println("发送的文件长度：" + fileLength + "，发送文件的名称：" + filename);
+        // filesystem.upload(buffer.array(), "/image/product/" + filename + ".jpg",fileLength);
+        filesystem.upload(buffer.array(), "/image/product/iphone.jpg",fileLength);
     }
+
+    private static void testReadFile() throws Exception {
+        byte[] fileByte = filesystem.download("/image/product/iphone.jpg");
+        ByteBuffer buffer = ByteBuffer.wrap(fileByte);
+        FileOutputStream imageOut = new FileOutputStream("F:\\tmp\\iphone.jpg");
+        FileChannel imageChannel = imageOut.getChannel();
+        imageChannel.write(buffer);
+
+        imageChannel.close();
+        imageOut.close();
+    }
+
+
    /* private static void testCreateFile() throws Exception {
        // File file = new File("F:\\tmp\\lvchao.jpg");
         File file = new File("F:\\tmp\\lvchao.txt");

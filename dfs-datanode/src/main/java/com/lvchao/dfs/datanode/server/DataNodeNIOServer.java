@@ -199,6 +199,7 @@ public class DataNodeNIOServer extends Thread{
         } else {
             // 获取消息类型
             Integer requestType = getRequestType(socketChannel);
+            ThreadUtils.println("读取请求类型为：" + requestType);
             if (SEND_FILE.equals(requestType)){
                 handleSendFileRequest(socketChannel, key);
             } else if (READ_FILE.equals(requestType)){
@@ -256,7 +257,6 @@ public class DataNodeNIOServer extends Thread{
         if (Objects.isNull(fileLength)){
             return;
         }
-        ThreadUtils.println("从网络请求中解析出来文件长度：" + fileLength);
         // 定义已经读取的文件大小
         Long hasReadFileLength = getHasReadFileLength(socketChannel);
         ThreadUtils.println("初始化已经读取的文件大小：" + hasReadFileLength);
@@ -292,7 +292,7 @@ public class DataNodeNIOServer extends Thread{
         }
 
         // 说明读取到了完整的数据
-        if (hasReadFileLength.equals(fileLength)){
+        if (cachedRequestMap.get(client).getHasReadFileLength().equals(fileLength)){
             ByteBuffer outBuffer = ByteBuffer.wrap("SUCCESS".getBytes());
             socketChannel.write(outBuffer);
             cachedRequestMap.remove(client);
@@ -348,9 +348,9 @@ public class DataNodeNIOServer extends Thread{
      * @return
      */
     private Filename getFilename(SocketChannel channel) throws Exception{
-        Filename filename = null;
         String client = channel.getRemoteAddress().toString();
-        if (cachedRequestMap.containsKey(client)){
+        Filename filename = cachedRequestMap.get(client).getFilename();
+        if (Objects.nonNull(filename) && Objects.nonNull(filename.getAbsoluteFilename()) && Objects.nonNull(filename.getRelativeFilename())){
             filename = cachedRequestMap.get(client).getFilename();
         }else {
             String relativeFilename = getRelativeFilename(channel);
@@ -372,11 +372,14 @@ public class DataNodeNIOServer extends Thread{
      * @return
      * @throws Exception
      */
-    private long getHasReadFileLength(SocketChannel channel) throws Exception{
+    private Long getHasReadFileLength(SocketChannel channel) throws Exception{
         Long hasReadFileLength = 0L;
         String remoteAddr = channel.getRemoteAddress().toString();
         if (cachedRequestMap.containsKey(remoteAddr)){
             hasReadFileLength = cachedRequestMap.get(remoteAddr).getHasReadFileLength();
+            if (Objects.isNull(hasReadFileLength)){
+                hasReadFileLength = 0L;
+            }
         }
         return hasReadFileLength;
     }
@@ -426,7 +429,8 @@ public class DataNodeNIOServer extends Thread{
         // 判断文件路径是否存在不存在则创建
         File dir = new File(dirPath);
         if (!dir.exists()){
-            throw new RuntimeException("文件路径不能为空：" + dirPath);
+            dir.mkdirs();
+            // throw new RuntimeException("文件路径不能为空：" + dirPath);
         }
         return dirPath + "\\" + relativeFilenameSplited[relativeFilenameSplited.length -1];
     }
