@@ -21,16 +21,19 @@ public class DataNode {
 	 * 负责跟一组NameNode通信的组件
 	 */
 	private NameNodeRpcClient nameNodeRpcClient;
-
-	/**
-	 * 文件磁盘管理器
-	 */
-	private StorageManager storageManager;
-
 	/**
 	 * 心跳发送组件
 	 */
 	private HeartbeatManager heartbeatManager;
+	/**
+	 * 文件磁盘管理器
+	 */
+	private StorageManager storageManager;
+	/**
+	 * 复制任务管理组件
+	 */
+	private ReplicateManager replicateManager;
+
 
 	/**
 	 * 初始化DataNode
@@ -41,23 +44,19 @@ public class DataNode {
 
 		// 创建和nameNode网络通信组件，并启动
 		this.nameNodeRpcClient = new NameNodeRpcClient();
-
+		this.storageManager = new StorageManager();
 		// 发送注册请求-并更具注册请求处理
 		Boolean registerFlag = this.nameNodeRpcClient.register();
-		if (!registerFlag){
-			System.out.println("向NameNode注册失败，直接退出......");
-			System.exit(1);
+		if (registerFlag){
+			StorageInfo storageInfo = this.storageManager.getDataNodeStoredInfo();
+			this.nameNodeRpcClient.reportCompleteStorageInfo(storageInfo);
+		}else {
+			ThreadUtils.println("不需要全量上报存储信息...");
 		}
+		this.replicateManager = new ReplicateManager(this.nameNodeRpcClient);
 
-		this.storageManager = new StorageManager();
-
-		this.heartbeatManager = new HeartbeatManager(this.nameNodeRpcClient, this.storageManager);
+		this.heartbeatManager = new HeartbeatManager(this.nameNodeRpcClient, this.storageManager, this.replicateManager);
 		this.heartbeatManager.start();
-
-		StorageInfo dataNodeStoredInfo = this.storageManager.getDataNodeStoredInfo();
-
-		// 向NameNode发送数据
-		this.nameNodeRpcClient.reportCompleteStorageInfo(dataNodeStoredInfo);
 
 		// 创建上传图片线程
 		DataNodeNIOServer dataNodeNIOServer = new DataNodeNIOServer(this.nameNodeRpcClient);

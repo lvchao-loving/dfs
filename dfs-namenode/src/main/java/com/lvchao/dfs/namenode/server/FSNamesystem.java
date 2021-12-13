@@ -18,7 +18,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 负责管理元数据的核心组件
  */
 public class FSNamesystem {
-
+	/**
+	 * 副本数量
+	 */
+	public static final Integer REPLICA_NUM = 2;
 	/**
 	 * 负责管理内存文件目录树的组件
 	 */
@@ -40,9 +43,13 @@ public class FSNamesystem {
 	 */
 	private String checkpintTxidFilePath = "F:\\editslog\\checkpoint-txid.meta";
 	/**
-	 * 每个文件对应的副本所在的DataNode节点信息
+	 * 每个文件对应的副本所在的DataNode节点信息，Map<filename,List<DataNodeInfo>>
 	 */
 	private Map<String,List<DataNodeInfo>> replicasByFilename = new HashMap<>();
+	/**
+	 * 每个DataNodeInfo对应的所有的文件副本，Map<hostname,List<String>>
+	 */
+	private Map<String,List<String>> filesByDatanode = new HashMap<>();
 	/**
 	 * 读写分离锁
 	 */
@@ -173,8 +180,8 @@ public class FSNamesystem {
 			Collections.sort(fileList, new Comparator<File>() {
 				@Override
 				public int compare(File o1, File o2) {
-					Integer o1Sequence = Integer.valueOf(o1.getName().split("-")[1]);
-					Integer o2Sequence = Integer.valueOf(o2.getName().split("-")[1]);
+					Integer o1Sequence = Integer.valueOf(o1.getName().split("_")[1]);
+					Integer o2Sequence = Integer.valueOf(o2.getName().split("_")[1]);
 					return o1Sequence - o2Sequence;
 				}
 			});
@@ -285,28 +292,78 @@ public class FSNamesystem {
 	 * @param filename
 	 * @throws Exception
 	 */
-	public void addReceivedReplica(String hostname, String ip, String filename) throws Exception {
+	public void addReceivedReplica(String hostname, String ip, String filename, Long fileLength) throws Exception {
 		try {
 			reentrantReadWriteLock.writeLock().lock();
+			// 找到对应的 DataNodeInfo 信息
+			DataNodeInfo dataNodeInfo = dataNodeManager.getDataNodeInfo(ip, hostname);
+			// 存储文件对应的 DataNodeInfoList
 			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
 
+			// 前面增加了 reentrantReadWriteLock 锁，所以这里不需要加锁，否则需要加锁
 			if (dataNodeInfoList == null) {
 				dataNodeInfoList = new ArrayList<DataNodeInfo>();
 				replicasByFilename.put(filename, dataNodeInfoList);
 			}
 
-			DataNodeInfo dataNodeInfo = dataNodeManager.getDataNodeInfo(ip, hostname);
+			// 判断是否超出副本限制
+			if (dataNodeInfoList.size() == REPLICA_NUM){
+				dataNodeInfo.addStoredDataSize(-fileLength);
+
+				RemoveReplicaTask removeReplicaTask = new RemoveReplicaTask(filename, dataNodeInfo);
+				dataNodeInfo.addRemoveReplicaTask(removeReplicaTask);
+
+				return;
+			}
 
 			dataNodeInfoList.add(dataNodeInfo);
+
+			// 维护每个数据节点拥有的文件副本
+			List<String> files = filesByDatanode.get(ip + "_" +hostname);
+			if (files == null){
+				files = new ArrayList<String>();
+				filesByDatanode.put(ip + "_" + hostname, files);
+			}
+			files.add(filename + "_" + fileLength);
 		} finally {
 			reentrantReadWriteLock.writeLock().unlock();
 		}
-/*
-		ThreadUtils.println("遍历数据开始");
-		for (String key : replicasByFilename.keySet()) {
-			ThreadUtils.println(key + "--------" + JSONArray.toJSONString(replicasByFilename.get(key)));
+	}
+
+	/**
+	 * 获取数据节点包含的文件
+	 * @param ip
+	 * @param hostname
+	 * @return
+	 */
+	public List<String> getFilesByDatanode(String ip, String hostname){
+		try {
+			reentrantReadWriteLock.readLock().lock();
+			ThreadUtils.println("当前filesByDatanode为" + filesByDatanode + "，将要以key=" + ip + "_" +  hostname + "获取文件列表");
+			return filesByDatanode.get(ip + "_" + hostname);
+		} finally {
+			reentrantReadWriteLock.readLock().unlock();
 		}
-		ThreadUtils.println("遍历数据开始");*/
+	}
+
+	/**
+	 * 删除数据节点的文件副本的数据结构
+	 * @param dataNodeInfo
+	 */
+	public void removeFilesByDataNodeInfo(DataNodeInfo dataNodeInfo) {
+		try {
+			reentrantReadWriteLock.writeLock().lock();
+
+			List<String> filenameList = filesByDatanode.get(dataNodeInfo.getHostname());
+			for (String filename:filenameList) {
+				List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+				dataNodeInfoList.remove(dataNodeInfo);
+			}
+
+			filesByDatanode.remove(dataNodeInfo.getHostname());
+		} finally {
+			reentrantReadWriteLock.writeLock().unlock();
+		}
 	}
 
 	/**
@@ -329,6 +386,56 @@ public class FSNamesystem {
 			return dataNodeInfoList.get(index);
 		} finally {
 			reentrantReadWriteLock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * 获取复制任务的源头数据节点
+	 * @param filename
+	 * @param deadDatanode
+	 * @return
+	 */
+	public DataNodeInfo getReplicateSource(String filename, DataNodeInfo deadDatanode){
+		DataNodeInfo replicateSource = null;
+		try {
+			reentrantReadWriteLock.readLock().lock();
+			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+			for (DataNodeInfo dataNodeInfo:dataNodeInfoList) {
+				if (!dataNodeInfo.equals(deadDatanode)){
+					replicateSource = dataNodeInfo;
+					break;
+				}
+			}
+		} finally {
+			reentrantReadWriteLock.readLock().unlock();
+		}
+		return replicateSource;
+	}
+
+	/**
+	 * 删除数据节点的文件副本的数据结构
+	 * @param dataNodeInfo
+	 */
+	public void removeDeadDatanode(DataNodeInfo dataNodeInfo) {
+		try {
+			reentrantReadWriteLock.writeLock().lock();
+			List<String> filenames = filesByDatanode.get(dataNodeInfo.getIp() + "_" + dataNodeInfo.getHostname());
+
+			if (filenames == null || filenames.size() == 0){
+				return;
+			}
+
+			for (String filenameAndLength:filenames) {
+				String filename = filenameAndLength.split("_")[0];
+				List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+				dataNodeInfoList.remove(dataNodeInfo);
+			}
+
+			filesByDatanode.remove(dataNodeInfo.getIp() + "_" + dataNodeInfo.getHostname());
+
+			ThreadUtils.println("从内存数据结构中删除掉这个数据节点关联的数据，" + replicasByFilename + "，" + filesByDatanode);
+		} finally {
+			reentrantReadWriteLock.writeLock().unlock();
 		}
 	}
 }

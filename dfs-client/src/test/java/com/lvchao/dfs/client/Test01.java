@@ -1,5 +1,7 @@
 package com.lvchao.dfs.client;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,7 +16,14 @@ public class Test01 {
     public static AtomicInteger atomicInteger = new AtomicInteger(1);
 
     public static void main(String[] args) {
-        System.out.println(atomicInteger.getAndIncrement());
-        System.out.println(atomicInteger.incrementAndGet());
+       /* System.out.println(atomicInteger.getAndIncrement());
+        System.out.println(atomicInteger.incrementAndGet());*/
+        /*Map<String, String> hashMap = new HashMap<>();
+        hashMap.put("key1","value1");
+        hashMap.put("key2","value2");
+        hashMap.put("key3","value3");
+        hashMap.put("key4","value4");
+        hashMap.put("key5","value4");
+        System.out.println(hashMap.values());*/
     }
 }

@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse;
 
+import java.io.File;
+import java.util.Objects;
+
 
 /**
  * @Title: HeartbeatManager
@@ -14,6 +17,12 @@ import com.lvchao.dfs.namenode.rpc.model.HeartbeatResponse;
  * @version: V1.0
  */
 public class HeartbeatManager {
+    public static final Integer SUCCESS = 1;
+    public static final Integer FAILURE = 2;
+    public static final Integer COMMAND_REGISTER = 1;
+    public static final Integer COMMAND_REPORT_COMPLETE_STORAGE_INFO = 2;
+    public static final Integer COMMAND_REPLICATE = 3;
+    public static final Integer COMMAND_REMOVE_REPLICA = 4;
 
     private DataNodeConfig dataNodeConfig = new DataNodeConfig();
 
@@ -21,9 +30,12 @@ public class HeartbeatManager {
 
     private StorageManager storageManager;
 
-    public HeartbeatManager(NameNodeRpcClient nameNodeRpcClient, StorageManager storageManager) {
+    private ReplicateManager replicateManager;
+
+    public HeartbeatManager(NameNodeRpcClient nameNodeRpcClient, StorageManager storageManager, ReplicateManager replicateManager) {
         this.nameNodeRpcClient = nameNodeRpcClient;
         this.storageManager = storageManager;
+        this.replicateManager = replicateManager;
     }
 
     /**
@@ -49,15 +61,40 @@ public class HeartbeatManager {
                     // 调用datanode组件发送注册心跳请求
                     HeartbeatResponse response = nameNodeRpcClient.heartbeat();
 
-                    // 解析发送过来的心跳命令
-                    if (response.getStatus() == 2) {
+                    if (SUCCESS.equals(response.getStatus())){
+                        JSONArray commandArray = JSONArray.parseArray(response.getCommands());
+                        if (Objects.nonNull(commandArray) && commandArray.size() > 0){
+                            for (int i = 0; i < commandArray.size(); i++) {
+                                JSONObject command = commandArray.getJSONObject(i);
+                                Integer type = command.getInteger("type");
+                                JSONObject task = command.getJSONObject("content");
+
+                                if (type.equals(COMMAND_REPLICATE)){
+                                    replicateManager.addReplicateTask(task);
+                                    ThreadUtils.println("接受副本复制任务" + command);
+                                } else if (type.equals(COMMAND_REMOVE_REPLICA)){
+                                    // 删除副本
+                                    String filename = task.getString("filename");
+                                    FileUtils fileUtils = new FileUtils();
+                                    String absoluteFilename = fileUtils.getAbsoluteFilename(filename);
+                                    File file = new File(absoluteFilename);
+                                    if (file.exists()){
+                                        file.delete();
+                                    }
+                                }
+                            }
+                        }
+                    }else if (FAILURE.equals(response.getStatus())){
                         JSONArray commandArray = JSONArray.parseArray(response.getCommands());
                         for (int i = 0; i < commandArray.size(); i++) {
                             JSONObject command = commandArray.getJSONObject(i);
                             Integer type = command.getInteger("type");
-                            if (type.equals(1)) {
+                            // 处理注册的命令
+                            if (type.equals(COMMAND_REGISTER)) {
                                 nameNodeRpcClient.register();
-                            } else {
+                            }
+                            // 处理全量上报的命令
+                            else if (type.equals(COMMAND_REPORT_COMPLETE_STORAGE_INFO)){
                                 StorageInfo dataNodeStoredInfo = storageManager.getDataNodeStoredInfo();
                                 nameNodeRpcClient.reportCompleteStorageInfo(dataNodeStoredInfo);
                             }

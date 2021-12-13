@@ -37,7 +37,7 @@ public class StorageManager {
         for (File file:fileList) {
             if (file.isFile()){
                 storageInfo.addStoredDataSize(file.length());
-                storageInfo.addFilename(file.getPath().replace(dataNodeConfig.DATA_DIR,"").replace("\\","/"));
+                storageInfo.addFilename(file.getPath().replace(dataNodeConfig.DATA_DIR,"").replace("\\","/") + "_" + file.length());
             }else {
                 scanFils(file,storageInfo);
             }

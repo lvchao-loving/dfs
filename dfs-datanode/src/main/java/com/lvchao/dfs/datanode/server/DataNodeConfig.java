@@ -10,7 +10,7 @@ package com.lvchao.dfs.datanode.server;
  */
 public class DataNodeConfig {
 
-    public String NAMENODE_HOSTNAME = "localhost";
+    public static volatile String NAMENODE_HOSTNAME = "localhost";
     public Integer NAMENODE_PORT = 50070;
 
     public String DATANODE_HOSTNAME = "localhost";

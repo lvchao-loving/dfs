@@ -13,3 +13,5 @@ NameNodeServiceActor组件中创建了两个组件【RegisterThread】和【Hear
 DataNodeNIOServer作用：接收发送图片的请求
 DataNodeNIOServer实现：底层使用NIO和队列完成
 
+
+

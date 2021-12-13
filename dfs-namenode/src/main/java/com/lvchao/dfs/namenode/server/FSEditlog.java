@@ -201,7 +201,7 @@ public class FSEditlog {
 							Long endTxid = Long.valueOf(txids[1]);
 							if (checkpointTxid >= endTxid){
 								// 删除文件
-								String filePath = "F:\\editslog\\edits-" + startTxid + "-" + endTxid + ".log";
+								String filePath = "F:\\editslog\\edits_" + startTxid + "_" + endTxid + ".log";
 								File file = new File(filePath);
 								if (file.exists()){
 									ThreadUtils.println("发现editlog日志文件不需要 ，进行删除" + filePath);

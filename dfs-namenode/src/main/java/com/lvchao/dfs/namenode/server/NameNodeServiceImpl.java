@@ -10,8 +10,10 @@ import io.grpc.stub.StreamObserver;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * NameNode的rpc服务的接口
@@ -89,25 +91,83 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 	public void heartbeat(HeartbeatRequest request, 
 			StreamObserver<HeartbeatResponse> responseObserver) {
 		// 接收请求完成注册
-		Boolean heartbeatResult = datanodeManager.heartbeat(request.getIp(), request.getHostname());
+		String ip = request.getIp();
+		String hostname = request.getHostname();
+		Boolean heartbeatResult = datanodeManager.heartbeat(ip, hostname);
 
 		HeartbeatResponse response = null;
 
+		List<Command> commandList = new ArrayList<>();
+
 		if (heartbeatResult){
+			// 处理 DataNodeInfo 节点中任务队列的数据
+			List<Command> commandAddList = handleReplicateTaskQueue(ip, hostname);
+			if (commandAddList.size() > 0){
+				commandList.addAll(commandAddList);
+			}
+
+			// 处理 DataNodeInfo 节点中任务队列的数据
+			List<Command> commandRemoveList = handleRemoveReplicateTaskQueue(ip, hostname);
+			if (commandRemoveList.size() > 0){
+				commandList.addAll(commandRemoveList);
+			}
+
 			response = HeartbeatResponse.newBuilder()
 					.setStatus(STATUS_SUCCESS)
+					.setCommands(JSONArray.toJSONString(commandList))
 					.build();
-		}else {
+		}else { // 注册失败处理的逻辑
+
+			// 封装注册的命令
 			Command commandREGISTER = new Command(Command.REGISTER);
+			// 封装全量上报的命令
 			Command commandREPORT_COMPLETE_STORAGE_INFO = new Command(Command.REPORT_COMPLETE_STORAGE_INFO);
+			commandList.add(commandREGISTER);
+			commandList.add(commandREPORT_COMPLETE_STORAGE_INFO);
 			response = HeartbeatResponse.newBuilder()
 					.setStatus(STATUS_FAILURE)
-					.setCommands(JSONArray.toJSONString(Arrays.asList(commandREGISTER, commandREPORT_COMPLETE_STORAGE_INFO)))
+					.setCommands(JSONArray.toJSONString(commandList))
 					.build();
 		}
 	
 		responseObserver.onNext(response);
 		responseObserver.onCompleted();
+	}
+
+	private List<Command> handleRemoveReplicateTaskQueue(String ip, String hostname) {
+		DataNodeInfo dataNodeInfo = datanodeManager.getDataNodeInfo(ip, hostname);
+		List<Command> commandList = new ArrayList<>();
+		while (true){
+			RemoveReplicaTask removeReplicaTask = dataNodeInfo.pollRemoveReplicaTask();
+			if (Objects.isNull(removeReplicaTask)){
+				break;
+			}
+			Command command = new Command(Command.REMOVE_REPLICA);
+			command.setContent(JSONObject.toJSONString(removeReplicaTask));
+			commandList.add(command);
+		}
+		return commandList;
+	}
+
+	/**
+	 * 处理 DataNodeInfo 节点中任务队列的数据
+	 * @param ip
+	 * @param hostname
+	 * @return
+	 */
+	private List<Command> handleReplicateTaskQueue(String ip, String hostname) {
+		DataNodeInfo dataNodeInfo = datanodeManager.getDataNodeInfo(ip, hostname);
+		List<Command> commandList = new ArrayList<>();
+		while (true){
+			ReplicateTask replicateTask = dataNodeInfo.pollReplicateTask();
+			if (Objects.isNull(replicateTask)){
+				break;
+			}
+			Command command = new Command(Command.REPLICATE);
+			command.setContent(JSONObject.toJSONString(replicateTask));
+			commandList.add(command);
+		}
+		return commandList;
 	}
 
 	@Override
@@ -298,7 +358,8 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 			if (!isRunning){
 				response = InformReplicaReceivedResponse.newBuilder().setStatus(STATUS_SHUTDOWN).build();
 			}else {
-				namesystem.addReceivedReplica(request.getHostname(),request.getIp(),request.getFilename());
+				String filename = request.getFilename();
+				namesystem.addReceivedReplica(request.getHostname(),request.getIp(), filename.split("_")[0], Long.valueOf(filename.split("_")[1]));
 				response = InformReplicaReceivedResponse.newBuilder()
 						.setStatus(STATUS_SUCCESS)
 						.build();
@@ -323,7 +384,8 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 				JSONArray filenames = JSONArray.parseArray(request.getFilenames());
 
 				for (int i = 0; i < filenames.size(); i++) {
-					namesystem.addReceivedReplica(request.getHostname(),request.getIp(),filenames.getString(i));
+					String filename = filenames.getString(i);
+					namesystem.addReceivedReplica(request.getHostname(), request.getIp(), filename.split("_")[0], Long.valueOf(filename.split("_")[1]));
 				}
 
 				response = ReportCompleteStorageInfoResponse.newBuilder()
@@ -369,7 +431,7 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 			long startTxid = Long.valueOf(flushedTxidSplited[0]);
 			long endTxid = Long.valueOf(flushedTxidSplited[1]);
 
-			String currentEditsLogFile = "F:\\editslog\\edits-" + startTxid + "-" + endTxid + ".log";
+			String currentEditsLogFile = "F:\\editslog\\edits_" + startTxid + "_" + endTxid + ".log";
 
 			List<String> editsLogs = Files.readAllLines(Paths.get(currentEditsLogFile));
 			for(String editsLog : editsLogs) {

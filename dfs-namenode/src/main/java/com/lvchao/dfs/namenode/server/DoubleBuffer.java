@@ -142,7 +142,7 @@ public class DoubleBuffer {
                 return;
             }
             // 拼接文件路径
-            String editsLogFilePath = "F:\\editslog\\edits-" + startTxid + "-" + endTxid + ".log";
+            String editsLogFilePath = "F:\\editslog\\edits_" + startTxid + "_" + endTxid + ".log";
             // 将持久化磁盘的数据记录在 doublebuffer 中
             flushedTxids.add(startTxid + "_" + endTxid);
 

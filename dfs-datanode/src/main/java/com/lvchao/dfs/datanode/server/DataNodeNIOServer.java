@@ -277,9 +277,20 @@ public class DataNodeNIOServer extends Thread{
             int len = socketChannel.read(byteBuffer);
             if (!byteBuffer.hasRemaining()){
                 byteBuffer.flip();
-                fileChannel.write(byteBuffer);
+                int written = fileChannel.write(byteBuffer);
                 cachedRequestMap.get(client).setHasReadFileLength(hasReadFileLength + len);
                 fileByClient.remove(client);
+                ThreadUtils.println("本次文件上传完毕，将" + written + " bytes的数据写入本地磁盘文件.......");
+                // 向客户端发送消息
+                ByteBuffer outbuffer = ByteBuffer.wrap("SUCCESS".getBytes());
+                socketChannel.write(outbuffer);
+                cachedRequestMap.remove(client);
+                ThreadUtils.println("文件读取完毕，返回响应给客户端：" + client);
+                nameNodeRpcClient.informReplicaReceived(filename.relativeFilename + "_" + fileLength);
+
+                ThreadUtils.println("增量上传文件副本给NameNode节点...");
+                //  “&～xx” 代表取消xx   ”|xx“ 代表将xx添加进去
+                key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
             }else {
                 cachedRequestMap.get(client).setHasReadFileLength(hasReadFileLength + len);
                 fileByClient.put(client, byteBuffer);
@@ -289,19 +300,6 @@ public class DataNodeNIOServer extends Thread{
             // 执行到这里说明已经读取完当前socketchannel中的数据（并不代表读取到了完整的图片数据），则关闭 Filechannel 和 FileOutputStream
             fileChannel.close();
             fileOutputStream.close();
-        }
-
-        // 说明读取到了完整的数据
-        if (cachedRequestMap.get(client).getHasReadFileLength().equals(fileLength)){
-            ByteBuffer outBuffer = ByteBuffer.wrap("SUCCESS".getBytes());
-            socketChannel.write(outBuffer);
-            cachedRequestMap.remove(client);
-            ThreadUtils.println("文件读取完毕，返回响应给客户端：" + client);
-
-            nameNodeRpcClient.informReplicaReceived(filename.relativeFilename);
-
-            ThreadUtils.println("增量上传文件副本给NameNode节点...");
-            key.interestOps(key.interestOps() & ~SelectionKey.OP_READ);
         }
     }
 

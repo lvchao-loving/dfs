@@ -31,8 +31,8 @@ public class FileSystemTest {
        /* for (int i = 0; i < 10; i++) {
             testCreateFile();
         }*/
-      //  testCreateFile();
-        testReadFile();
+        testCreateFile();
+        //testReadFile();
 
     }
 
@@ -42,7 +42,7 @@ public class FileSystemTest {
                 Random random = new Random();
                 for (int j = 1; j <= 100; j++) {
                     try {
-                        filesystem.mkdir("/usr/local/lvchao1" + atomicInteger.getAndIncrement());
+                        filesystem.mkdir("/usr/local/lvchao" + atomicInteger.getAndIncrement());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -74,7 +74,7 @@ public class FileSystemTest {
         String filename = UUID.randomUUID().toString();
         ThreadUtils.println("发送的文件长度：" + fileLength + "，发送文件的名称：" + filename);
         // filesystem.upload(buffer.array(), "/image/product/" + filename + ".jpg",fileLength);
-        filesystem.upload(buffer.array(), "/image/product/iphone.jpg",fileLength);
+        filesystem.upload(buffer.array(), "/image/product/iphone1.jpg",fileLength);
     }
 
     private static void testReadFile() throws Exception {
