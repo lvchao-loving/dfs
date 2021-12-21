@@ -112,14 +112,32 @@ public class NameNodeServiceGrpc {
           io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoRequest.getDefaultInstance()),
           io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse.getDefaultInstance()));
   @io.grpc.ExperimentalApi
-  public static final io.grpc.MethodDescriptor<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest,
-      com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse> METHOD_GET_DATA_NODE_FOR_FILE =
+  public static final io.grpc.MethodDescriptor<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest,
+      com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse> METHOD_CHOOSE_DATA_NODE_FROM_REPLICAS =
       io.grpc.MethodDescriptor.create(
           io.grpc.MethodDescriptor.MethodType.UNARY,
           generateFullMethodName(
-              "com.lvchao.dfs.namenode.rpc.NameNodeService", "getDataNodeForFile"),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest.getDefaultInstance()),
-          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse.getDefaultInstance()));
+              "com.lvchao.dfs.namenode.rpc.NameNodeService", "chooseDataNodeFromReplicas"),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse.getDefaultInstance()));
+  @io.grpc.ExperimentalApi
+  public static final io.grpc.MethodDescriptor<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest,
+      com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse> METHOD_REALLOCATE_DATA_NODE =
+      io.grpc.MethodDescriptor.create(
+          io.grpc.MethodDescriptor.MethodType.UNARY,
+          generateFullMethodName(
+              "com.lvchao.dfs.namenode.rpc.NameNodeService", "reallocateDataNode"),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse.getDefaultInstance()));
+  @io.grpc.ExperimentalApi
+  public static final io.grpc.MethodDescriptor<com.lvchao.dfs.namenode.rpc.model.RebalanceRequest,
+      com.lvchao.dfs.namenode.rpc.model.RebalanceResponse> METHOD_REBALANCE =
+      io.grpc.MethodDescriptor.create(
+          io.grpc.MethodDescriptor.MethodType.UNARY,
+          generateFullMethodName(
+              "com.lvchao.dfs.namenode.rpc.NameNodeService", "rebalance"),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.RebalanceRequest.getDefaultInstance()),
+          io.grpc.protobuf.ProtoUtils.marshaller(com.lvchao.dfs.namenode.rpc.model.RebalanceResponse.getDefaultInstance()));
 
   public static NameNodeServiceStub newStub(io.grpc.Channel channel) {
     return new NameNodeServiceStub(channel);
@@ -167,8 +185,14 @@ public class NameNodeServiceGrpc {
     public void reportCompleteStorageInfo(com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoRequest request,
         io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse> responseObserver);
 
-    public void getDataNodeForFile(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request,
-        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse> responseObserver);
+    public void chooseDataNodeFromReplicas(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse> responseObserver);
+
+    public void reallocateDataNode(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse> responseObserver);
+
+    public void rebalance(com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.RebalanceResponse> responseObserver);
   }
 
   public static interface NameNodeServiceBlockingClient {
@@ -193,7 +217,11 @@ public class NameNodeServiceGrpc {
 
     public com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse reportCompleteStorageInfo(com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoRequest request);
 
-    public com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse getDataNodeForFile(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request);
+    public com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse chooseDataNodeFromReplicas(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request);
+
+    public com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse reallocateDataNode(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request);
+
+    public com.lvchao.dfs.namenode.rpc.model.RebalanceResponse rebalance(com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request);
   }
 
   public static interface NameNodeServiceFutureClient {
@@ -228,8 +256,14 @@ public class NameNodeServiceGrpc {
     public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse> reportCompleteStorageInfo(
         com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoRequest request);
 
-    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse> getDataNodeForFile(
-        com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request);
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse> chooseDataNodeFromReplicas(
+        com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request);
+
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse> reallocateDataNode(
+        com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request);
+
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.RebalanceResponse> rebalance(
+        com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request);
   }
 
   public static class NameNodeServiceStub extends io.grpc.stub.AbstractStub<NameNodeServiceStub>
@@ -320,10 +354,24 @@ public class NameNodeServiceGrpc {
     }
 
     @java.lang.Override
-    public void getDataNodeForFile(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request,
-        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse> responseObserver) {
+    public void chooseDataNodeFromReplicas(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse> responseObserver) {
       asyncUnaryCall(
-          getChannel().newCall(METHOD_GET_DATA_NODE_FOR_FILE, getCallOptions()), request, responseObserver);
+          getChannel().newCall(METHOD_CHOOSE_DATA_NODE_FROM_REPLICAS, getCallOptions()), request, responseObserver);
+    }
+
+    @java.lang.Override
+    public void reallocateDataNode(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(METHOD_REALLOCATE_DATA_NODE, getCallOptions()), request, responseObserver);
+    }
+
+    @java.lang.Override
+    public void rebalance(com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request,
+        io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.RebalanceResponse> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(METHOD_REBALANCE, getCallOptions()), request, responseObserver);
     }
   }
 
@@ -405,9 +453,21 @@ public class NameNodeServiceGrpc {
     }
 
     @java.lang.Override
-    public com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse getDataNodeForFile(com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request) {
+    public com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse chooseDataNodeFromReplicas(com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request) {
       return blockingUnaryCall(
-          getChannel(), METHOD_GET_DATA_NODE_FOR_FILE, getCallOptions(), request);
+          getChannel(), METHOD_CHOOSE_DATA_NODE_FROM_REPLICAS, getCallOptions(), request);
+    }
+
+    @java.lang.Override
+    public com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse reallocateDataNode(com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request) {
+      return blockingUnaryCall(
+          getChannel(), METHOD_REALLOCATE_DATA_NODE, getCallOptions(), request);
+    }
+
+    @java.lang.Override
+    public com.lvchao.dfs.namenode.rpc.model.RebalanceResponse rebalance(com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request) {
+      return blockingUnaryCall(
+          getChannel(), METHOD_REBALANCE, getCallOptions(), request);
     }
   }
 
@@ -499,10 +559,24 @@ public class NameNodeServiceGrpc {
     }
 
     @java.lang.Override
-    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse> getDataNodeForFile(
-        com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest request) {
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse> chooseDataNodeFromReplicas(
+        com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest request) {
       return futureUnaryCall(
-          getChannel().newCall(METHOD_GET_DATA_NODE_FOR_FILE, getCallOptions()), request);
+          getChannel().newCall(METHOD_CHOOSE_DATA_NODE_FROM_REPLICAS, getCallOptions()), request);
+    }
+
+    @java.lang.Override
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse> reallocateDataNode(
+        com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(METHOD_REALLOCATE_DATA_NODE, getCallOptions()), request);
+    }
+
+    @java.lang.Override
+    public com.google.common.util.concurrent.ListenableFuture<com.lvchao.dfs.namenode.rpc.model.RebalanceResponse> rebalance(
+        com.lvchao.dfs.namenode.rpc.model.RebalanceRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(METHOD_REBALANCE, getCallOptions()), request);
     }
   }
 
@@ -516,7 +590,9 @@ public class NameNodeServiceGrpc {
   private static final int METHODID_ALLOCATE_DATA_NODES = 7;
   private static final int METHODID_INFORM_REPLICA_RECEIVED = 8;
   private static final int METHODID_REPORT_COMPLETE_STORAGE_INFO = 9;
-  private static final int METHODID_GET_DATA_NODE_FOR_FILE = 10;
+  private static final int METHODID_CHOOSE_DATA_NODE_FROM_REPLICAS = 10;
+  private static final int METHODID_REALLOCATE_DATA_NODE = 11;
+  private static final int METHODID_REBALANCE = 12;
 
   private static class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -574,9 +650,17 @@ public class NameNodeServiceGrpc {
           serviceImpl.reportCompleteStorageInfo((com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoRequest) request,
               (io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse>) responseObserver);
           break;
-        case METHODID_GET_DATA_NODE_FOR_FILE:
-          serviceImpl.getDataNodeForFile((com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest) request,
-              (io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse>) responseObserver);
+        case METHODID_CHOOSE_DATA_NODE_FROM_REPLICAS:
+          serviceImpl.chooseDataNodeFromReplicas((com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest) request,
+              (io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse>) responseObserver);
+          break;
+        case METHODID_REALLOCATE_DATA_NODE:
+          serviceImpl.reallocateDataNode((com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest) request,
+              (io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse>) responseObserver);
+          break;
+        case METHODID_REBALANCE:
+          serviceImpl.rebalance((com.lvchao.dfs.namenode.rpc.model.RebalanceRequest) request,
+              (io.grpc.stub.StreamObserver<com.lvchao.dfs.namenode.rpc.model.RebalanceResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -667,12 +751,26 @@ public class NameNodeServiceGrpc {
               com.lvchao.dfs.namenode.rpc.model.ReportCompleteStorageInfoResponse>(
                 serviceImpl, METHODID_REPORT_COMPLETE_STORAGE_INFO)))
         .addMethod(
-          METHOD_GET_DATA_NODE_FOR_FILE,
+          METHOD_CHOOSE_DATA_NODE_FROM_REPLICAS,
           asyncUnaryCall(
             new MethodHandlers<
-              com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileRequest,
-              com.lvchao.dfs.namenode.rpc.model.GetDataNodeForFileResponse>(
-                serviceImpl, METHODID_GET_DATA_NODE_FOR_FILE)))
+              com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasRequest,
+              com.lvchao.dfs.namenode.rpc.model.ChooseDataNodeFromReplicasResponse>(
+                serviceImpl, METHODID_CHOOSE_DATA_NODE_FROM_REPLICAS)))
+        .addMethod(
+          METHOD_REALLOCATE_DATA_NODE,
+          asyncUnaryCall(
+            new MethodHandlers<
+              com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeRequest,
+              com.lvchao.dfs.namenode.rpc.model.ReallocateDataNodeResponse>(
+                serviceImpl, METHODID_REALLOCATE_DATA_NODE)))
+        .addMethod(
+          METHOD_REBALANCE,
+          asyncUnaryCall(
+            new MethodHandlers<
+              com.lvchao.dfs.namenode.rpc.model.RebalanceRequest,
+              com.lvchao.dfs.namenode.rpc.model.RebalanceResponse>(
+                serviceImpl, METHODID_REBALANCE)))
         .build();
   }
 }

@@ -399,18 +399,20 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		}
 	}
 
-	/**
-	 * 描述：通过 filename 发起请求，返回 file 对应存储的 DataNode
-	 * @param request
-	 * @param responseObserver
-	 */
 	@Override
-	public void getDataNodeForFile(GetDataNodeForFileRequest request, StreamObserver<GetDataNodeForFileResponse> responseObserver) {
+	public void chooseDataNodeFromReplicas(ChooseDataNodeFromReplicasRequest request, StreamObserver<ChooseDataNodeFromReplicasResponse> responseObserver) {
 		try {
-			String filename = request.getFilename();
-			DataNodeInfo dataNodeInfo = namesystem.getDataNodeForFile(filename);
-			GetDataNodeForFileResponse response = GetDataNodeForFileResponse.newBuilder()
-					.setDatanodeInfo(JSON.toJSONString(dataNodeInfo)).build();
+			ChooseDataNodeFromReplicasResponse response = null;
+			if (!isRunning){
+				response = ChooseDataNodeFromReplicasResponse.newBuilder().setDatanode(null).build();
+			}else {
+				String filename = request.getFilename();
+				String excludedDataNodeId = request.getExcludedDataNodeId();
+				DataNodeInfo dataNodeInfo = namesystem.chooseDataNodeFromReplicas(filename, excludedDataNodeId);
+				response = ChooseDataNodeFromReplicasResponse.newBuilder()
+						.setDatanode(JSON.toJSONString(dataNodeInfo))
+						.build();
+			}
 			responseObserver.onNext(response);
 			responseObserver.onCompleted();
 		} catch (Exception e) {
@@ -418,6 +420,26 @@ public class NameNodeServiceImpl implements NameNodeServiceGrpc.NameNodeService 
 		}
 	}
 
+	@Override
+	public void reallocateDataNode(ReallocateDataNodeRequest request, StreamObserver<ReallocateDataNodeResponse> responseObserver) {
+		long fileSize = request.getFileSize();
+		String excludedDataNodeId = request.getExcludedDataNodeId();
+		DataNodeInfo dataNodeInfo = datanodeManager.reallocateDataNode(fileSize, excludedDataNodeId);
+		ReallocateDataNodeResponse response = ReallocateDataNodeResponse.newBuilder().setDatanode(Objects.isNull(dataNodeInfo) ? "" : JSON.toJSONString(dataNodeInfo)).build();
+		responseObserver.onNext(response);
+		responseObserver.onCompleted();
+	}
+
+	@Override
+	public void rebalance(RebalanceRequest request, StreamObserver<RebalanceResponse> responseObserver){
+		datanodeManager.createRebalanceTasks();
+
+		RebalanceResponse response = RebalanceResponse.newBuilder()
+				.setStatus(STATUS_SUCCESS)
+				.build();
+		responseObserver.onNext(response);
+		responseObserver.onCompleted();
+	}
 	/**
 	 * 从已经刷入磁盘的文件里读取 edislog，同时缓存找个文件数据到内存
 	 * @param syncedTxid

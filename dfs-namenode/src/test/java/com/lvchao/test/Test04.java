@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 public class Test04 {
     public static void main(String[] args) {
-        List<DataNodeInfo> list = new ArrayList<>();
+       /* List<DataNodeInfo> list = new ArrayList<>();
         DataNodeInfo dataNodeInfo1 = new DataNodeInfo();
         dataNodeInfo1.setStoredDataSize(3L);
         DataNodeInfo dataNodeInfo2 = new DataNodeInfo();
@@ -29,6 +29,7 @@ public class Test04 {
         list.add(dataNodeInfo3);
 
         list.stream().sorted(Comparator.comparing(DataNodeInfo::getStoredDataSize).reversed()).collect(Collectors.toList());
-        list.forEach(System.out::println);
+        list.forEach(System.out::println);*/
+        System.out.println( 119 / 20);
     }
 }

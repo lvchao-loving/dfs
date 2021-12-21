@@ -52,6 +52,10 @@ public class DataNodeInfo {
         this.storedDataSize = 0L;
     }
 
+    public String getId(){
+        return ip + "_" + hostname;
+    }
+
     public void addReplicateTask(ReplicateTask replicateTask){
         replicateTaskQueue.offer(replicateTask);
     }

@@ -38,7 +38,7 @@ public class NIOClient {
      * @param filename
      * @param fileSize
      */
-    public void sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
+    public Boolean sendFile(String hostname, Integer nioPort, byte[] file, String filename, Long fileSize){
         SocketChannel socketChannel = null;
         Selector selector = null;
         try {
@@ -109,6 +109,7 @@ public class NIOClient {
             }
         }catch (Exception e){
             e.printStackTrace();
+            return false;
         } finally {
             if (socketChannel != null){
                 try {
@@ -125,6 +126,7 @@ public class NIOClient {
                 }
             }
         }
+        return true;
     }
 
     /**
@@ -157,7 +159,7 @@ public class NIOClient {
      * @param nioPort
      * @param filename
      */
-    public byte[] readFile(String hostname, Integer nioPort, String filename){
+    public byte[] readFile(String hostname, Integer nioPort, String filename) throws Exception{
         SocketChannel socketChannel = null;
         Selector selector = null;
         byte[] byteArray = null;
@@ -236,6 +238,7 @@ public class NIOClient {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException("读取图片异常...");
         } finally {
             if (socketChannel != null){
                 try{

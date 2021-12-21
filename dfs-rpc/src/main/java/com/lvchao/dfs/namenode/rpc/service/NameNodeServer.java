@@ -24,8 +24,8 @@ public final class NameNodeServer {
   static {
     java.lang.String[] descriptorData = {
       "\n\027NameNodeRpcServer.proto\022\033com.lvchao.df" +
-      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\333" +
-      "\n\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
+      "s.namenode.rpc\032\026NameNodeRpcModel.proto2\347" +
+      "\014\n\017NameNodeService\022g\n\010register\022,.com.lvc" +
       "hao.dfs.namenode.rpc.RegisterRequest\032-.c" +
       "om.lvchao.dfs.namenode.rpc.RegisterRespo" +
       "nse\022j\n\theartbeat\022-.com.lvchao.dfs.nameno" +
@@ -55,12 +55,19 @@ public final class NameNodeServer {
       "\232\001\n\031reportCompleteStorageInfo\022=.com.lvch",
       "ao.dfs.namenode.rpc.ReportCompleteStorag" +
       "eInfoRequest\032>.com.lvchao.dfs.namenode.r" +
-      "pc.ReportCompleteStorageInfoResponse\022\205\001\n" +
-      "\022getDataNodeForFile\0226.com.lvchao.dfs.nam" +
-      "enode.rpc.GetDataNodeForFileRequest\0327.co" +
-      "m.lvchao.dfs.namenode.rpc.GetDataNodeFor" +
-      "FileResponseB7\n#com.lvchao.dfs.namenode." +
-      "rpc.serviceB\016NameNodeServerP\001b\006proto3"
+      "pc.ReportCompleteStorageInfoResponse\022\235\001\n" +
+      "\032chooseDataNodeFromReplicas\022>.com.lvchao" +
+      ".dfs.namenode.rpc.ChooseDataNodeFromRepl" +
+      "icasRequest\032?.com.lvchao.dfs.namenode.rp" +
+      "c.ChooseDataNodeFromReplicasResponse\022\205\001\n" +
+      "\022reallocateDataNode\0226.com.lvchao.dfs.nam" +
+      "enode.rpc.ReallocateDataNodeRequest\0327.co" +
+      "m.lvchao.dfs.namenode.rpc.ReallocateData",
+      "NodeResponse\022j\n\trebalance\022-.com.lvchao.d" +
+      "fs.namenode.rpc.RebalanceRequest\032..com.l" +
+      "vchao.dfs.namenode.rpc.RebalanceResponse" +
+      "B7\n#com.lvchao.dfs.namenode.rpc.serviceB" +
+      "\016NameNodeServerP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

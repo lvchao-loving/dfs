@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * 负责管理元数据的核心组件
@@ -434,6 +435,50 @@ public class FSNamesystem {
 			filesByDatanode.remove(dataNodeInfo.getIp() + "_" + dataNodeInfo.getHostname());
 
 			ThreadUtils.println("从内存数据结构中删除掉这个数据节点关联的数据，" + replicasByFilename + "，" + filesByDatanode);
+		} finally {
+			reentrantReadWriteLock.writeLock().unlock();
+		}
+	}
+
+	public DataNodeInfo chooseDataNodeFromReplicas(String filename, String excludedDataNodeId) {
+		try {
+			reentrantReadWriteLock.readLock().lock();
+			List<DataNodeInfo> dataNodeInfoList = replicasByFilename.get(filename);
+			if (Objects.isNull(dataNodeInfoList) || dataNodeInfoList.isEmpty()){
+				ThreadUtils.println("无可用数据节点");
+				return null;
+			}
+			if (StringUtils.isNotBlank(excludedDataNodeId)){
+				dataNodeInfoList = dataNodeInfoList.stream().filter(item ->
+						!excludedDataNodeId.equals(item.getIp() + "_" + item.getHostname())).collect(Collectors.toList());
+			}
+
+			// TODO 后续对这个index取随机数
+			int index = 0;
+			DataNodeInfo dataNodeInfo = dataNodeInfoList.get(0);
+			ThreadUtils.println("返回的可用的数据节点为：" + dataNodeInfo);
+			return dataNodeInfo;
+		} finally {
+			reentrantReadWriteLock.readLock().unlock();
+		}
+	}
+
+	/**
+	 * 从数据节点删除掉一个文件副本
+	 * @param id
+	 * @param file
+	 */
+	public void removeReplicaFromDataNode(String id, String file) {
+		try {
+			reentrantReadWriteLock.writeLock().lock();
+			filesByDatanode.get(id).remove(file);
+			Iterator<DataNodeInfo> iterator = replicasByFilename.get(file.split("_")[0]).iterator();
+			while(iterator.hasNext()){
+				DataNodeInfo replica = iterator.next();
+				if (replica.getId().equals(id)){
+					iterator.remove();
+				}
+			}
 		} finally {
 			reentrantReadWriteLock.writeLock().unlock();
 		}

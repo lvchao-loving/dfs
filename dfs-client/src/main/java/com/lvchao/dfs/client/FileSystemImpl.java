@@ -1,5 +1,6 @@
 package com.lvchao.dfs.client;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.lvchao.dfs.namenode.rpc.model.*;
@@ -7,6 +8,7 @@ import com.lvchao.dfs.namenode.rpc.service.NameNodeServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.NegotiationType;
 import io.grpc.netty.NettyChannelBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @Title: FileSystemImpl
@@ -63,27 +65,84 @@ public class FileSystemImpl implements FileSystem{
         for (int i = 0; i < datanodeArray.size(); i++) {
             JSONObject datanode = datanodeArray.getJSONObject(i);
             String hostname = datanode.getString("hostname");
+            String ip = datanode.getString("ip");
             Integer nioPort = datanode.getIntValue("nioPort");
-            nioClient.sendFile(hostname, nioPort, file, filename, fileSize);
+            Boolean result = nioClient.sendFile(hostname, nioPort, file, filename, fileSize);
+            // 通过nio发送图片没有成功
+            if (!result){
+                // 重新向namenode节点发送获取有效的datanode
+                datanode = JSONObject.parseObject(reallocateDataNode(filename, fileSize,  ip + "_" + hostname));
+                hostname = datanode.getString("hostname");
+                nioPort = datanode.getIntValue("nioPort");
+                // 再次发送
+                result = nioClient.sendFile(hostname, nioPort, file, filename, fileSize);
+                if (!result){
+                    throw new RuntimeException("file upload failed......");
+                }
+            }
         }
 
         return true;
     }
 
-    @Override
-    public byte[] download(String filename) throws Exception {
-        JSONObject dataNodeInfoJSON =  getDataNodeInfoForFile(filename);
-
-        String hostname = dataNodeInfoJSON.getString("hostname");
-        Integer nioPort = dataNodeInfoJSON.getInteger("nioPort");
-
-        return nioClient.readFile(hostname, nioPort ,filename);
+    /**
+     * 重新分配一个数据节点
+     * @param filename
+     * @param fileSize
+     * @param excludedDataNodeId
+     * @return
+     */
+    private String reallocateDataNode(String filename, Long fileSize, String excludedDataNodeId){
+        ReallocateDataNodeRequest reallocateDataNodeRequest = ReallocateDataNodeRequest.newBuilder().setFileSize(fileSize).setExcludedDataNodeId(excludedDataNodeId).build();
+        ReallocateDataNodeResponse reallocateDataNodeResponse = namenode.reallocateDataNode(reallocateDataNodeRequest);
+        return reallocateDataNodeResponse.getDatanode();
     }
 
-    private JSONObject getDataNodeInfoForFile(String filename) {
-        GetDataNodeForFileRequest request = GetDataNodeForFileRequest.newBuilder().setFilename(filename).build();
-        GetDataNodeForFileResponse dataNodeForFile = namenode.getDataNodeForFile(request);
-        return JSONObject.parseObject(dataNodeForFile.getDatanodeInfo());
+    /**
+     * 下载文件
+     * @param filename 文件名称
+     * @return 文件字节数组
+     * @throws Exception
+     */
+    @Override
+    public byte[] download(String filename) throws Exception {
+        JSONObject dataNodeInfoJSON =  chooseDataNodeFromReplicas(filename,"");
+
+        String hostname = dataNodeInfoJSON.getString("hostname");
+        String ip = dataNodeInfoJSON.getString("ip");
+        Integer nioPort = dataNodeInfoJSON.getInteger("nioPort");
+        byte[] file = null;
+        try {
+            file = nioClient.readFile(hostname, nioPort, filename);
+        } catch (Exception e) {
+            // 下载失败使用其他datanode节点重新下载
+            dataNodeInfoJSON = chooseDataNodeFromReplicas(filename, ip + "_" + hostname);
+            hostname = dataNodeInfoJSON.getString("hostname");
+            nioPort = dataNodeInfoJSON.getInteger("nioPort");
+
+            try{
+                file = nioClient.readFile(hostname, nioPort, filename);
+            }catch (Exception exception){
+                throw new RuntimeException("服务运行异常");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 根据文件名称获取存储文件 DataNode 节点，并排除指定的 datanode 节点
+     * @param filename
+     * @param excludedDataNodeId
+     * @return
+     */
+    private JSONObject chooseDataNodeFromReplicas(String filename, String excludedDataNodeId){
+        ChooseDataNodeFromReplicasRequest request = ChooseDataNodeFromReplicasRequest.newBuilder().setFilename(filename).setExcludedDataNodeId(excludedDataNodeId).build();
+        ChooseDataNodeFromReplicasResponse chooseDataNodeFromReplicasResponse = namenode.chooseDataNodeFromReplicas(request);
+        String datanode = chooseDataNodeFromReplicasResponse.getDatanode();
+        if (StringUtils.isBlank(datanode)){
+            throw new RuntimeException("执行chooseDataNodeFromReplicas方法获取datanode节点异常");
+        }
+        return JSONObject.parseObject(datanode);
     }
 
     /**
